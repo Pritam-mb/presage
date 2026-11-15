@@ -23,10 +23,10 @@
   const sampleArrays = ['samples', 'breathingSamples', 'traceSamples', 'cardiacTraceSamples', 'faceSamples'];
   function node(tag, text, className) { const el = document.createElement(tag); if (text != null) el.textContent = text; if (className) el.className = className; return el; }
   function showView(name) {
-    if (!['capture', 'trust', 'evidence', 'ml'].includes(name)) name = 'capture';
+    if (!['capture', 'trust', 'evidence', 'ml', 'arena'].includes(name)) name = 'capture';
     document.querySelectorAll('.view').forEach(el => { el.hidden = el.id !== `view-${name}`; });
     document.querySelectorAll('[data-view]').forEach(el => { el.classList.toggle('active', el.dataset.view === name); el.setAttribute('aria-current', el.dataset.view === name ? 'page' : 'false'); });
-    $('page-label').textContent = { capture: 'CAPTURE LABORATORY', trust: 'TRUST BOUNDARIES', evidence: 'EVIDENCE REPORT', ml: 'MODEL LAB' }[name];
+    $('page-label').textContent = { capture: 'CAPTURE LABORATORY', trust: 'TRUST BOUNDARIES', evidence: 'EVIDENCE REPORT', ml: 'MODEL LAB',arena:'POLICY ARENA' }[name];
     if (name === 'ml') window.SpoofML?.refresh?.();
     if (location.hash !== `#${name}`) history.replaceState(null, '', `#${name}`);
   }
@@ -35,6 +35,7 @@
     $('start').disabled = value || !isElectron || state.restartRequired || ($('condition').value!=='injected_replay'&&!cameraReady());
     if(isElectron)$('start').title=$('condition').value!=='injected_replay'&&!cameraReady()?'Confirm consent and run Check camera FPS first. Require at least 25 delivered FPS.':'';
     $('recording-consent').disabled=value;
+    $('scenario').disabled=value;$('camera-pipeline').disabled=value;
     $('check-camera').disabled = value || !isElectron;
     $('camera-device').disabled = value || !isElectron;
     $('refresh-cameras').disabled = value || !isElectron;
@@ -252,7 +253,7 @@
     if (trials.length >= 300) { $('error').textContent = 'Export and clear the ledger before collecting more than 300 trials.'; return; }
     const run = { key: $('key').value.trim(), sdk: null, stream: null, url: null, cancelled: false, finalizing: false,
       captureStart: null, timestampOffset: null, lastDraw: 0, seen: Object.fromEntries(sampleArrays.map(k => [k,new Set()])),
-      trial: { trialId: crypto.randomUUID(), condition, protocol, startedAt: new Date().toISOString(), durationSec: 0,
+      trial: { trialId: crypto.randomUUID(), condition, protocol, scenario:$('scenario').value.trim()||null,camera:{pipeline:$('camera-pipeline').value},startedAt: new Date().toISOString(), durationSec: 0,
         endReason: 'starting', notes: $('notes').value, consent: { attested: true, recordingOwnerAttested:condition==='live'?null:$('recording-consent').checked, at: new Date().toISOString(), textVersion: 'consent-v3' },
         sdkVersion: 'unknown', source: { kind: condition === 'injected_replay' ? 'recording_stream' : 'webcam', fileName: condition === 'injected_replay' ? file.name : null },
         samples: [], breathingSamples: [], traceSamples: [], cardiacTraceSamples: [], faceSamples: [], validationEvents: [], processingEvents: [], errors: [], challenge: null, challengeEvents: [],
@@ -372,6 +373,7 @@
     $('status').textContent = `Evidence retained in memory · ${run.trial.summary.outcome.replaceAll('_',' ')} · policy ${run.trial.summary.verifier.outcome}`;
     $('capture-label').textContent = 'TRIAL ENDED';
     await persist();
+    window.dispatchEvent(new CustomEvent('spooflab:trial-saved',{detail:run.trial}));
   }
   function updateTrust(trial, provisional = false) {
     const s = P.summarize({ ...trial, durationSec: provisional ? elapsed(state.run) : trial.durationSec });
@@ -410,6 +412,7 @@
     busy(!!(state.run||state.cameraCheck||state.cameraRefresh));
     if (state.selectedId) selectTrial(state.selectedId,false);
     window.SpoofML?.refresh?.();
+    window.SpoofArena?.refresh?.();
   }
   function selectTrial(id,scroll=true) {
     const trial=trials.find(t=>t.trialId===id); if(!trial)return; state.selectedId=id;
@@ -443,6 +446,7 @@
     $('report-status').textContent=`Imported ${fresh.length} trials; skipped ${imported.length-fresh.length} duplicate IDs. Imported evidence is unauthenticated; summaries were recomputed.`;
   }
   window.SpoofML?.mount({getTrials:()=>trials,download,isBusy:()=>!!(state.run||state.cameraCheck)});
+  window.SpoofArena?.mount({getTrials:()=>trials,download,isBusy:()=>!!(state.run||state.cameraCheck||state.cameraRefresh),showView,beginCapture:({condition,challenge})=>{$('condition').value=condition;$('condition').dispatchEvent(new Event('change'));$('challenge-enabled').checked=challenge;$('duration').value='90';showView('capture');}});
   $('duration').value='90';
   for(const id of ['camera-device','camera-profile','condition'])$(id).addEventListener('change',()=>busy(!!(state.run||state.cameraCheck||state.cameraRefresh)));
   $('condition').addEventListener('change',()=>{$('recording-consent-row').hidden=$('condition').value==='live';$('recording-consent').checked=false;});
@@ -468,7 +472,7 @@
   $('confirm-clear').addEventListener('click',async()=>{
     if(state.run||state.cameraCheck||state.cameraRefresh)return;
     if(window.SpoofStorage){try{await window.SpoofStorage.clear();}catch(error){$('report-status').textContent='Could not delete saved trials: '+error.message;return;}}
-    if(state.run||state.cameraCheck||state.cameraRefresh)return;trials.length=0;state.selectedId=null;window.SpoofML?.clearEvaluation?.();renderEvidence();$('detail-panel').hidden=true;$('detail-content').replaceChildren();
+    if(state.run||state.cameraCheck||state.cameraRefresh)return;trials.length=0;state.selectedId=null;window.SpoofArena?.clear?.();window.SpoofML?.clearEvaluation?.();renderEvidence();$('detail-panel').hidden=true;$('detail-content').replaceChildren();
     $('trust-signal').textContent='No evidence yet';$('trust-policy').textContent='No trial selected';$('trust-verdict').textContent='Inconclusive';$('trust-reason').textContent='Capture a trial or import an evidence report.';$('trust-trial-id').textContent='NO TRIAL';$('trust-detail').textContent='Capture or select a trial to inspect its frozen policy and reasoning.';
     for(const id of ['pulse','breathing','confidence'])$(id).textContent='—';draw();$('clear-dialog').close();$('report-status').textContent='In-memory evidence cleared. Exported files remain on your device.';
   });

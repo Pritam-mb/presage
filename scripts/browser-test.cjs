@@ -37,6 +37,14 @@ async function evaluate(expression){const r=await send('Runtime.evaluate',{expre
   assert.equal(await evaluate('document.querySelector("#total-accepted").textContent'),'1');
   assert.equal(await evaluate('document.querySelector("#total-inconclusive").textContent'),'1');
   assert.equal(await evaluate('document.querySelector("#export-json").disabled'),false);
+  await evaluate('document.querySelector("[data-view=arena]").click();document.querySelector("#arena-evaluate").click()');
+  assert.equal(await evaluate('document.querySelector("#view-arena").hidden'),false);
+  assert.equal(await evaluate('document.querySelector("#arena-result").textContent.includes("Reveal: Me, live")'),false);
+  await evaluate('document.querySelector("#arena-reveal").click()');
+  assert.equal(await evaluate('document.querySelector("#arena-result").textContent.includes("Reveal: Me, live")'),true);
+  assert.equal(await evaluate('document.querySelector("#arena-scoreboard").textContent.includes("1 / 1")'),false,'Short pulse fixture must fail rather than pass');
+  assert.equal(await evaluate('document.querySelector("#arena-scoreboard").textContent.includes("0 / 1")'),true);
+  await evaluate('document.querySelector("[data-view=evidence]").click()');
   await evaluate('document.querySelector("#filter").value="live";document.querySelector("#filter").dispatchEvent(new Event("change"))');
   assert.equal(await evaluate('document.querySelectorAll("#trials tr").length'),1);
   await evaluate('document.querySelector("#trials button").click()');assert.equal(await evaluate('document.querySelector("#detail-panel").hidden'),false);
@@ -110,6 +118,13 @@ async function evaluate(expression){const r=await send('Runtime.evaluate',{expre
     assert.equal(await evaluate('!!document.querySelector("#ml-inspector table")'),true);
     assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth'),true);
   }
+  await evaluate('document.querySelector("[data-view=arena]").click();document.querySelector("#arena-policy").value="pulse-only-v1";[...document.querySelectorAll("#view-arena button")].find(b=>b.textContent==="Prepare live arena trial").click();window.__defer=false;document.querySelector("#start").click()');
+  for(let i=0;i<100;i++){if(await evaluate('document.querySelector("#status").textContent.includes("Collecting real SDK")'))break;await delay(20);}
+  await evaluate('window.__testNow=81000;window.__sdk.handlers.metrics({cardio:{pulseRate:Array.from({length:12},(_,i)=>({value:72,stable:true,confidence:80,timestamp:(12+i*.5)*1000000}))}});window.__testNow=151000');
+  for(let i=0;i<100;i++){if(await evaluate('!document.querySelector("#view-arena").hidden && !!document.querySelector("#arena-reveal")'))break;await delay(20);}
+  assert.equal(await evaluate('document.querySelector("#arena-result h2").textContent'),'PASS','Fresh synthetic capture must route through the frozen arena policy');
+  await evaluate('document.querySelector("#arena-reveal").click()');
+  assert.equal(await evaluate('document.querySelector("#arena-result").textContent.includes("Reveal: Me, live")'),true);
   assert.deepEqual(errors,[],'Browser runtime exceptions');
   console.log('Browser checks passed: preview mode, desktop/mobile layout, import/recompute, counts, filter, inspect, privacy, clear, synthetic SDK completion and startup cancellation, Model Lab tab mount. No real SDK measurements tested.');
 })().catch(error=>{console.error(error);process.exitCode=1;}).finally(async()=>{socket?.close();browser?.kill();if(server)await new Promise(resolve=>server.close(resolve));});

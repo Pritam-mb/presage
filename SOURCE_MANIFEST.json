@@ -4,16 +4,20 @@
   "includesTrialData": false,
   "files": [
     {
+      "file": "src/arena.js",
+      "sha256": "1a51f937d7239e1e78213111945496ee27c8e0d351827790e2b5042cb66aec67"
+    },
+    {
       "file": "src/camera.cjs",
       "sha256": "62b7cec930895e10d18b8aaca844f633d3ebdf90285677d4582ce5e1d7dcefbb"
     },
     {
       "file": "src/evidence.cjs",
-      "sha256": "26e1b90b15ee4dd820f2b6f6ae6bc701537aaeaeba1690175183336ecdaa603f"
+      "sha256": "e46a5f8b662cf3ca7cee5175e8dfb7760c05835eb8c61e97dc483feb89a66abe"
     },
     {
       "file": "src/index.html",
-      "sha256": "bdbddbbc067c37fb7851760ebc3136e9d83f3705b2b6c9d9c2a8dc69ed11a752"
+      "sha256": "46bb60f7381119b629c1d3f715b6b7d429bf7486edeacba3dd2e7a1bc3db1db4"
     },
     {
       "file": "src/main.cjs",
@@ -32,6 +36,10 @@
       "sha256": "1627a90e2602210db4c9933b381d997a26355c194f6a27852c38f9af3453c730"
     },
     {
+      "file": "src/policies.cjs",
+      "sha256": "9f1ec7c52828d7529508aa3d50cffee8e070533418019245009ae230071b04b3"
+    },
+    {
       "file": "src/preload.cjs",
       "sha256": "9455ef6af1cd53b9291b118f7b621eae35485c9f34bcebe1e8e39450dcaf2a38"
     },
@@ -41,7 +49,7 @@
     },
     {
       "file": "src/renderer.js",
-      "sha256": "8926523cdb97e2e94437988823bc839c32542b4b6465df19af4a3c412b9e5c55"
+      "sha256": "38b84f0e468bc28e3db66edcff29658c54a5a2eae1f0a48871f81f2fb03332e3"
     },
     {
       "file": "src/reports.cjs",
@@ -69,7 +77,7 @@
     },
     {
       "file": "scripts/browser-test.cjs",
-      "sha256": "85380d9c31dea3731897b9e81b91c602162e2d93794a4354098871ec6fd4e9ff"
+      "sha256": "4d463b74ec0a21f6bc487395faa8a92a89453dd248bc4a627c1ae758855ed5af"
     },
     {
       "file": "scripts/cdp.cjs",
@@ -101,7 +109,7 @@
     },
     {
       "file": "scripts/preview.cjs",
-      "sha256": "49a5fbd470c5157568dec5196808f2fa66326ad2f2f9a2e4811cedfceb67e277"
+      "sha256": "28034df9b4c768496203b16a8f6f98d425b2f287148ca731a72a5f5b09ddb335"
     },
     {
       "file": "scripts/render-post.cjs",
@@ -126,6 +134,10 @@
     {
       "file": "test/ml-ui.test.cjs",
       "sha256": "45c720377aa9041c90e98f9525a9a4663dc27fe86d579a05a958e71fed650a44"
+    },
+    {
+      "file": "test/policies.test.cjs",
+      "sha256": "1281f634ae0828107f57708e11c2a651ba67c209325e49086e7844550564eeec"
     },
     {
       "file": "test/protocol.test.cjs",
@@ -194,6 +206,26 @@
     {
       "file": "fixtures/sanitized-example.json",
       "sha256": "eaa2dcba8586808ab4e6f8721c900fe37b376e83b5766d6aef1814c36cdfa80a"
+    },
+    {
+      "file": "docs/PRIVACY.md",
+      "sha256": "f8748deabc85b40b6fdb5be16f9d0f38b527cb4ccabd134dc8db8901cc3dc6ac"
+    },
+    {
+      "file": "docs/THREAT_MODEL.md",
+      "sha256": "646b96048a004ec2f94b5d8888a1ca263d8ee214193dd93bd2125542ce1792fd"
+    },
+    {
+      "file": "docs/EXPERIMENTS.md",
+      "sha256": "f03a046869eafd89b8a33b89e62b05e0ab76c066cdacfc7e019a2fd2bde97d52"
+    },
+    {
+      "file": "docs/ML_LIMITATIONS.md",
+      "sha256": "f550bd6d49d2ebf323362cdcff6f59a9219734a5f05647d8831d6157ed7a4c59"
+    },
+    {
+      "file": "docs/ORIGINALITY.md",
+      "sha256": "5260a18fd6627ab8d4ecba37f9d42cb21a08841655e75dee3e39a48d2d53223d"
     },
     {
       "file": "docs/CAMERA.md",
