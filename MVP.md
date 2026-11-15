@@ -1,5 +1,14 @@
 # SpoofLab — Evidence-first MVP
 
+## Authorized harness correction and licensing - November 15, 2026
+
+Owner authorized the proposed choices. Added MIT LICENSE for source only. Original reference code remains archived unchanged; the active amended runner is scripts/harness-runtime.cjs, documented in docs/HARNESS_AMENDMENTS.md. Schema/consent/identifier validation retains all historical attempts; three low/unknown-FPS live attempts are reported as quality-limited. They cannot satisfy the successful live baseline, which still needs saved delivered FPS >=25, >=60 seconds and signal output. The separate >=25 FPS / >=6-second real diagnostic and every frozen measurement-policy threshold remain unchanged. No real trial was edited or removed.
+
+Product-claim scanning now distinguishes engineering diagnostics from diagnosis and audits product text rather than executable tests or supplied developer examples. Prohibited medical/security/liveness claims still fail. Added tests for prohibited claims, absent/low FPS and non-mutating audits. Added final-only checks for actual M1-M5 sign-offs and a completed originality review within 48 hours, so placeholders cannot establish final readiness. Publication and consent have not been signed or performed.
+
+Working-stage hard gates now pass with the separate source repository selected. Final submission remains deferred: real URLs/video, publication permissions, manual reviews and final-window originality review are outstanding. No additional recordings are needed to repair historical validation failures. Source-only copy and G10 are refreshed separately; nothing is pushed.
+
+
 Latest v3 integration: reference files now found as docs/harness.md and docs/addon_spec.md. Active harness preserves supplied checks and adds G7?G10. A1/A2 outputs and 81 saved policy traces generated; Evidence Report cards and dynamic Model Lab control headline implemented. 43 tests, build/syntax and browser workflow pass. A1 has zero confirmed recording pairs (same-person comparisons remain descriptive); A2 is conditional simulation over four timelines. Optional leakage demo is NO-GO without required series. The token-built POST.md remains unpublished. Original trial evidence unchanged.
 
 Remaining hard gates need resolution: license choice, protected all-historical-live >=25 FPS check versus keeping failed attempts, and claim-scanner false positives. No protected thresholds or word lists changed. Public consent/manual reviews/video are deferred. Do not call final readiness complete.

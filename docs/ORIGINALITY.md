@@ -2,6 +2,8 @@
 
 **Status: incomplete. No final originality rescan has been performed or signed here.** This placeholder does not satisfy manual gate M4 or a final readiness gate.
 
+Review completed at: pending
+
 The master requires a new review within 48 hours of submission. Review public entries and their own descriptions, including the current official submissions feed. Distinguish an author's claims from independently demonstrated functionality. Do not claim that SpoofLab is the first or only project in this area.
 
 The proposed distinction to assess is the combination of fixed source-blind measurement policies, inspectable decision traces, a verdict-before-reveal arena, retained failures and a Model Lab that exposes the limitations of training fit. This is intended positioning, not a verified novelty claim.

@@ -4,7 +4,7 @@ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const {spawnSync}=require('node:child_process');
 const {audit}=require('./g10-public-repo.cjs');
 const P=require('../src/policies.cjs');
-const reference=path.join(__dirname,'reference','harness.cjs');
+const reference=path.join(__dirname,'harness-runtime.cjs');
 const finite=n=>typeof n==='number'&&Number.isFinite(n);
 function readJSON(root,name){return JSON.parse(fs.readFileSync(path.join(root,name),'utf8').replace(/^\uFEFF/,''));}
 function additions(root,options={}){
@@ -13,6 +13,12 @@ function additions(root,options={}){
  // The optional G7 snippet is also preserved exactly as supplied.
  const exists=p=>fs.existsSync(path.join(root,p));
  const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+ const submission=exists('docs/SUBMISSION.md')?read('docs/SUBMISSION.md'):'';
+ const manual=['M1','M2','M3','M4','M5'].every(id=>new RegExp('^- \\[x\\] '+id+'\\b','im').test(submission));
+ add('G5.5','Manual M1-M5 attestations explicitly signed (final only)',!!options.final,manual,'Never inferred from file existence. Actual operator review is still required.');
+ const originality=exists('docs/ORIGINALITY.md')?read('docs/ORIGINALITY.md'):'';
+ const reviewed=Date.parse(originality.match(/^Review completed at:\s*(\S+)/im)?.[1]||'');
+ add('G5.6','Completed originality review within 48 hours (final only)',!!options.final,Number.isFinite(reviewed)&&reviewed<=Date.now()&&Date.now()-reviewed<=48*36e5&&/https:\/\//.test(originality)&&/proof of breath/i.test(originality),'Requires actual dated review, source links and comparison; placeholder mentions do not satisfy this gate.');
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'reference','ml-gate.cjs'),'utf8'),{exists,read,add,JSON});
  const testFile=path.join(root,'test','policies.test.cjs');
  const source=path.join(root,'src','policies.cjs');
@@ -51,7 +57,7 @@ function additions(root,options={}){
 }
 function markdown(report){
  const rows=report.results.map(r=>`| ${r.id} | ${r.name.replace(/\|/g,'/')} | ${r.hard?'hard':'soft'} | ${r.ok?'PASS':'FAIL'} | ${String(r.detail||'').replace(/\s+/g,' ').replace(/\|/g,'/').slice(0,220)} |`);
- return ['# HARNESS STATUS','',`Run: ${report.at} | mode: ${report.final?'FINAL':'working'} | protected reference plus v3 additions`,'','| Gate | Check | Type | Result | Detail |','|---|---|---|---|---|',...rows,'',report.ready?'ALL HARD GATES PASS.':`NOT DONE: ${report.results.filter(r=>r.hard&&!r.ok).length} hard gate(s) failing.`,'','The supplied reference thresholds and claim lists are unchanged. This audit cannot establish trial honesty, participant permission or the contents of a video. Manual M1–M5 reviews remain separate. No real evidence, Git history, remote or publication is modified.',''].join('\n');
+ return ['# HARNESS STATUS','',`Run: ${report.at} | mode: ${report.final?'FINAL':'working'} | authorized amendments plus v3 additions`,'','| Gate | Check | Type | Result | Detail |','|---|---|---|---|---|',...rows,'',report.ready?'ALL HARD GATES PASS.':`NOT DONE: ${report.results.filter(r=>r.hard&&!r.ok).length} hard gate(s) failing.`,'','Frozen policy thresholds are unchanged. Authorized audit corrections are documented in docs/HARNESS_AMENDMENTS.md; the supplied reference is archived verbatim. This audit cannot establish trial honesty, participant permission or the contents of a video. Manual M1–M5 reviews remain separate. No real evidence, Git history, remote or publication is modified.',''].join('\n');
 }
 function run(root=process.cwd(),options={}){
  root=path.resolve(root);
@@ -62,7 +68,7 @@ function run(root=process.cwd(),options={}){
  try{base=readJSON(root,'harness-report.json');if(!Array.isArray(base.results)||Date.parse(base.at)<started)throw new Error('Invalid or stale report');}
  catch{base={at:new Date().toISOString(),final:!!options.final,results:[{id:'REFERENCE',name:'Supplied reference harness completed',hard:true,ok:false,detail:'Reference runner did not produce a valid report; inspect local implementation.'}]};}
  if(result.error||result.signal)base.results.push({id:'REFERENCE_RUNTIME',name:'Reference execution completed',hard:true,ok:false,detail:'Reference runner was interrupted or could not execute.'});
- const report={...base,at:new Date().toISOString(),final:!!options.final,contract:'protected-reference-plus-v3',results:[...base.results,...additions(root,options)]};
+ const report={...base,at:new Date().toISOString(),final:!!options.final,contract:'authorized-amendments-plus-v3',results:[...base.results,...additions(root,options)]};
  report.ready=!report.results.some(r=>r.hard&&!r.ok);
  fs.writeFileSync(path.join(root,'harness-report.json'),JSON.stringify(report,null,2));
  fs.writeFileSync(path.join(root,'HARNESS_STATUS.md'),markdown(report));

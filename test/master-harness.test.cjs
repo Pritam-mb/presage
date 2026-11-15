@@ -16,5 +16,12 @@ test('master additions require actual saved traces, n and source-only Git histor
   write('evidence/analysis/policy-traces.json',{synthetic:true,traces});write('evidence/analysis/paired.json',{synthetic:true,n:1});write('evidence/analysis/challenge-tradeoff.json',{synthetic:true,n:0});
   r=additions(temp);assert.equal(r.find(x=>x.id==='G8.2').ok,true);assert.equal(r.find(x=>x.id==='G9.1').ok,true);
   traces[0].decision='fail';write('evidence/analysis/policy-traces.json',{synthetic:true,traces});assert.equal(additions(temp).find(x=>x.id==='G8.2').ok,false,'A trace that disagrees with its metrics cannot establish coverage');
+  let final=additions(temp,{final:true});assert.equal(final.find(g=>g.id==='G5.5').ok,false);assert.equal(final.find(g=>g.id==='G5.5').hard,true);assert.equal(final.find(g=>g.id==='G5.6').ok,false);
+  fs.mkdirSync(path.join(temp,'docs'),{recursive:true});
+  fs.writeFileSync(path.join(temp,'docs/SUBMISSION.md'),['M1','M2','M3','M4','M5'].map(id=>'- [x] '+id+': synthetic reviewer fixture').join('\n'));
+  fs.writeFileSync(path.join(temp,'docs/ORIGINALITY.md'),'Review completed at: '+new Date().toISOString()+'\nProof of Breath compared with source https://example.invalid/synthetic-review');
+  final=additions(temp,{final:true});assert.equal(final.find(g=>g.id==='G5.5').ok,true);assert.equal(final.find(g=>g.id==='G5.6').ok,true);
+  fs.writeFileSync(path.join(temp,'docs/ORIGINALITY.md'),'Review completed at: 2020-01-01T00:00:00Z\nProof of Breath https://example.invalid/synthetic-review');
+  assert.equal(additions(temp,{final:true}).find(g=>g.id==='G5.6').ok,false,'A stale review cannot satisfy final readiness');
  }finally{const base=path.resolve(os.tmpdir())+path.sep;assert.ok(path.resolve(temp).startsWith(base)&&path.basename(temp).startsWith('spooflab-master-gates-'));fs.rmSync(temp,{recursive:true,force:true});}
 });

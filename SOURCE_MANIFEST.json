@@ -96,6 +96,10 @@
       "sha256": "9493f6ffbae555dbb6850be86f7ada6629685ad5ce7a81881bf38f116bfefec1"
     },
     {
+      "file": "scripts/claim-audit.cjs",
+      "sha256": "ae79561edc5532211cb4f8818fa1c2f9614a674ed04cd02234f96a1aa99a2a9f"
+    },
+    {
       "file": "scripts/desktop-test.cjs",
       "sha256": "68a2e8c3df2264564bca2e6afb5e30e5d326bc1aa686a4c923491d8aeaa5ead8"
     },
@@ -112,8 +116,12 @@
       "sha256": "ebbc3a11da16bf5516fc5de029597b85431fc442e5fae7c50d3c1029c7847b23"
     },
     {
+      "file": "scripts/harness-runtime.cjs",
+      "sha256": "a553da4d8477af73094e498fb3ca85746b8138f5e17440671b34fa05a1b94420"
+    },
+    {
       "file": "scripts/harness.cjs",
-      "sha256": "865e6c99164ee008bcf16a6794e5803c5c8e830c3e7ac1a08fe294152302cf23"
+      "sha256": "28d646701b90653b205830df9afc1df76d4d7c779150347b5f382c951895ded1"
     },
     {
       "file": "scripts/launch.cjs",
@@ -129,7 +137,7 @@
     },
     {
       "file": "scripts/prepare-source.cjs",
-      "sha256": "ab0e62b8cc1a8f43144aaa95946ab5bcc28c06aaa5b8b9d2a59c1e4ca4e5e4d9"
+      "sha256": "7e85630bcaca0ee82b0691a63361ec9f31c00e8df2f231ba9b545f759468863f"
     },
     {
       "file": "scripts/preview.cjs",
@@ -172,12 +180,16 @@
       "sha256": "6c3eae8dc1d8a5373122e32811e06ccbf589dfc41db4648210d304e1080619ea"
     },
     {
+      "file": "test/harness-amendments.test.cjs",
+      "sha256": "3f9b9aa154feb5e2ac8969eea71fc1f3e293d6ec32a88a2c3eb83d231fcdebd4"
+    },
+    {
       "file": "test/harness.test.cjs",
       "sha256": "f58be8231e205026fe654714641485cdbac0da9cd9b6be5afa4ec5813791d1c7"
     },
     {
       "file": "test/master-harness.test.cjs",
-      "sha256": "7e26a3757b50cac3754e9759a8ce09a1bf68af6c92d17d39795148b03c566ef3"
+      "sha256": "a79f6376c1f2ce32fe2d1d0f58be55bf5f648099ccc1ed85832dc785ca0a3e48"
     },
     {
       "file": "test/ml-ui.test.cjs",
@@ -241,11 +253,11 @@
     },
     {
       "file": "README.md",
-      "sha256": "dd450465158e92f8218101450a3bd8ebe50644b62212dd60a8757ae481d7934a"
+      "sha256": "670f479aa31c92613eba59a19295f087ea996d0576c606d350580c67baacf786"
     },
     {
       "file": "MVP.md",
-      "sha256": "90800cff284715c311626edc7cd7e94202c54e80bb1db7269e1bab5652190d59"
+      "sha256": "b1180b624a6edbb2b0e03a72bf687fd1b7df4da26020b75fc37b71c83f838d39"
     },
     {
       "file": ".gitignore",
@@ -262,6 +274,14 @@
     {
       "file": "fixtures/sanitized-example.json",
       "sha256": "eaa2dcba8586808ab4e6f8721c900fe37b376e83b5766d6aef1814c36cdfa80a"
+    },
+    {
+      "file": "LICENSE",
+      "sha256": "719a496d7adc4a245d62872cbb341f5767212410bdb145586f28c34c7de82204"
+    },
+    {
+      "file": "docs/HARNESS_AMENDMENTS.md",
+      "sha256": "d3cb780361e5575789281d2793a00670f4c1c3de626aa5c8b20c589513ed4e85"
     },
     {
       "file": "docs/harness.md",
@@ -297,7 +317,7 @@
     },
     {
       "file": "docs/ORIGINALITY.md",
-      "sha256": "5260a18fd6627ab8d4ecba37f9d42cb21a08841655e75dee3e39a48d2d53223d"
+      "sha256": "23599cdb042d23d0956b9e4180e07e2c293cbe1f669ae92d4852177c5cf9bbdb"
     },
     {
       "file": "docs/CAMERA.md",

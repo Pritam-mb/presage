@@ -1,5 +1,16 @@
 # SpoofLab — Break the assumptions, not the sensor
 
+## Local verification status
+
+Source is MIT licensed. Working-stage checks pass using the separate source-only repository:
+
+```powershell
+node scripts/harness.cjs --public-root D:\prestige-public
+```
+
+The archived supplied harness remains unchanged; approved corrections are documented in [docs/HARNESS_AMENDMENTS.md](docs/HARNESS_AMENDMENTS.md). Low-FPS attempts stay in the evidence, with quality limitations, and cannot establish a successful baseline. Frozen policy thresholds are unchanged. Final mode still requires actual public links, a live-signal video and manual reviews; those are deferred. No source or data has been published. If the source-only copy lives elsewhere, pass its actual path.
+
+
 ## Current local build
 
 The controlling plan is [SPOOFLAB_MASTER_HANDOFF.md](SPOOFLAB_MASTER_HANDOFF.md). Open **05 Policy Arena** to choose one of three frozen policies and a saved trial. Evaluate first, then reveal the recorded condition; export the decision trace if needed. Live presets prepare the usual consent/FPS capture flow and evaluate the completed trial. The scoreboard describes repeated trials, not independent people. Policies consume measurements only; a pass does not establish live presence.
