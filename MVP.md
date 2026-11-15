@@ -1,5 +1,13 @@
 # SpoofLab — Evidence-first MVP
 
+## Current controlling MVP ? November 15, 2026
+
+SPOOFLAB_MASTER_HANDOFF.md controls current work; older sections below are historical. Implemented: capture/evidence/local ML plus three frozen source-blind policies and Policy Arena (05), saved-trial hidden-condition evaluation/reveal, live preset preparation and automatic post-capture policy evaluation, decision-trace export and descriptive scoreboard with Wilson intervals. New captures include scenario/camera.pipeline fields. Policy output is pass/fail/abstain; it does not establish input provenance or human presence.
+
+A separate source-only review repository exists at D:/prestige-public; its independent G10 audit passes, with no remote or publication. Source-only preparation excludes secrets, private evidence and old history. Privacy/threat-model/experiments/ML-limitations/originality docs exist. Current automated checks: 34 Node tests, syntax, build and browser arena workflows pass.
+
+Still incomplete: exact protected-reference harness reconciliation (02/04 files missing), license selection, paired/challenge analyses or documented cuts, remaining report/ML presentation polish, manual privacy reviews and real demo. Existing evidence is unchanged; exploratory ML is training-only, not validated performance. Submission is deferred per user instruction. This supersedes older memory-only, eight-trial and missing-live-evidence descriptions below.
+
 Status: expanded application implemented; real-data validation and submission evidence remain in progress. November 15 updates.md is the latest requested scope; see PROGRESS.md for gaps and next steps.
 
 Finishing controls implemented: 50 shuffled-label LR fits, training-only ML display without accuracy figures, optional XGBoost demonstration, fresh camera FPS gating with automatic diagnostic saving, separate replay/photo permission, named readiness gates and summary-token-driven draft post. Code verification passes; final readiness remains blocked by real capture and publication evidence. See HARNESS_STATUS.md and docs/NEXT_STEPS.md.

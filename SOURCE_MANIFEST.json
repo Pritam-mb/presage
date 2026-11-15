@@ -185,11 +185,11 @@
     },
     {
       "file": "README.md",
-      "sha256": "b236611ffbbc76f1c013103d9483f7abf438286008bf48599f8bfeb018447980"
+      "sha256": "3fed73611985b30fa968f69d8f4271fd1f975138005822dddac6e3e9b89e6420"
     },
     {
       "file": "MVP.md",
-      "sha256": "a70a11186c495bcf56542099b5106f8fe33a87eac0e43613d486eb66f7acfd3d"
+      "sha256": "910f2aa109cde4144f729eb660587e1b4ec1b2b9fa5c72b349420aa9a7fd5073"
     },
     {
       "file": ".gitignore",

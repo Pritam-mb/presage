@@ -1,5 +1,11 @@
 # SpoofLab — Break the assumptions, not the sensor
 
+## Current local build
+
+The controlling plan is [SPOOFLAB_MASTER_HANDOFF.md](SPOOFLAB_MASTER_HANDOFF.md). Open **05 Policy Arena** to choose one of three frozen policies and a saved trial. Evaluate first, then reveal the recorded condition; export the decision trace if needed. Live presets prepare the usual consent/FPS capture flow and evaluate the completed trial. The scoreboard describes repeated trials, not independent people. Policies consume measurements only; a pass does not establish live presence.
+
+A separate source-only review Git repository is prepared at `D:/prestige-public`, with its G10 privacy/history check passing and no remote. Do not publish the original workspace history. Current checks cover 34 Node tests, build/syntax and browser arena workflows. The older harness below is not yet the new master's G0?G10 contract: the protected 02/04 reference files are missing. Submission and publication remain deferred.
+
 ## Current finishing workflow
 
 See [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md) for the remaining human capture/permission tasks. `node scripts/harness.cjs` now writes `HARNESS_STATUS.md`; use `--final` for submission readiness, and review every blocked gate. The post is rendered from aggregates with `node scripts/render-post.cjs` and remains an unpublished draft. The official challenge requires a public repository and demo video showing a live Presage signal; source/test success alone is insufficient.
