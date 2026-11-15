@@ -1,5 +1,14 @@
 # SpoofLab — Evidence-first MVP
 
+## Reproducible training and legacy restoration repair - November 15, 2026
+
+Investigated the reported 7/50 control instead of treating it as an accuracy result. Reproduced exactly: the old desktop loader accepted only 22 report-envelope files, skipping five valid legacy direct-trial files; that subset yielded 11 eligible trials and 7/50 under the previous input-order-dependent trainer. Original files remained present. The repaired loader restores all 27 with zero issues, validates both formats, preserves consent/import flags, reports corrupt/conflicting copies and does not rewrite files during load.
+
+Training now sorts eligible trials by trial ID before fixed-seed fitting/permutation and emits a labeled-feature fingerprint. Identical input records must produce the same control regardless of import/restore order. Verified restored-store and consolidated-reference inputs yield identical fingerprints, 13 eligible records and 20/50. This supersedes the old 21/50 snapshot and the partial-restore 7/50 run. Model hyperparameters, labels and frozen physiological policies were not tuned to change the count. The control remains training-fit exploration, not an accuracy or significance estimate.
+
+Regenerated local derived exploratory/strict reports, summary and unpublished draft. User should close/reopen the desktop app, confirm 27 restored/zero unreadable, then retrain exploratory mode or import the latest saved report. Inspect model errors and feature contributions and export the full snapshot. No new captures are needed. Original trial files and recordings were not edited by these checks.
+
+
 Verified local state: 46 Node tests, 12 Python tests, build/syntax, browser workflows and real desktop-to-Python ML checks pass. Working-stage hard gates pass. Captured evidence remains unchanged; exploratory fits are available while strict independent performance is intentionally withheld. Manual submission reviews/video/publication remain deferred. See PROGRESS.md and docs/NEXT_STEPS.md.
 
 Current ML refinement: matches the updates' capture-condition classifier scope. Real exploratory fitting remains available on 13 eligible records with a 21/50 shuffled-control headline, explanations and optional XGBoost inspection. Strict mode explicitly withholds grouped performance because only two of four connected groups contain both classes; matched-groups-v2 adds an operational audit, not scientific validation. Policy thresholds and raw evidence are unchanged. Mode-specific reports stay in memory when switching; current app instructions are docs/NEXT_STEPS.md. No additional captures are required for the present descriptive product. Submission is deferred.

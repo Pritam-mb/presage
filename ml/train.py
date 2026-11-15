@@ -167,15 +167,24 @@ def evaluate_report(data, mode="grouped"):
         reasons = eligibility(t)
         if reasons: excluded.append(dict(trialId=t["trialId"], reasons=reasons))
         else: trials.append(t)
+    # Import/restore order must not change fixed-seed folds or shuffled-label controls.
+    trials.sort(key=lambda t: t["trialId"])
     # Link through excluded records too: removing a low-quality bridge must not conceal shared provenance.
     all_groups = dict(zip([t["trialId"] for t in data["trials"]], connected_groups(data["trials"])))
     groups = np.array([all_groups[t["trialId"]] for t in trials]); y = np.array([int(t["condition"] == "live") for t in trials])
+    X = np.array([feature_vector(t) for t in trials], dtype=float)
+    fingerprint_rows = [dict(trialId=t["trialId"], label=int(y[i]), group=str(groups[i]),
+                             features=[float(v) if np.isfinite(v) else None for v in X[i]]) for i, t in enumerate(trials)]
+    fingerprint = hashlib.sha256(json.dumps(dict(version="canonical-trial-order-v2", features=FEATURES,
+                                                 rows=fingerprint_rows), sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
     audit = independence_audit(groups, y)
     result = dict(schema="spooflab-ml-evaluation-v1", status="insufficient_data", generatedAt=datetime.now(timezone.utc).isoformat(),
                   featureNames=FEATURES, featureVersion="time-bins-v1", probabilityCalibration="uncalibrated", decisionThreshold=.5,
                   dataset=dict(totalTrials=len(data["trials"]), eligibleTrials=len(trials), excluded=excluded, independentGroups=len(set(groups)), independentEvidenceAudit=audit),
                   splits=[], models=[], recommendations=[], narrative="", limitations=LIMITATIONS,
                   software=dict(numpy=np.__version__, sklearn=sklearn.__version__, xgboost=xgb.__version__), seed=42)
+    result["dataset"]["featureFingerprint"] = fingerprint
+    result["dataset"]["ordering"] = "trial_id_ascending_v2"
     def insufficient(message):
         result["narrative"] = message
         result["recommendations"] = ["Collect completed, consenting measurements from independent participant/recording groups with both live and non-live conditions.",
@@ -193,7 +202,6 @@ def evaluate_report(data, mode="grouped"):
                                      "No additional people are required to keep the present descriptive case study and exploratory training. Continue inspecting the existing fitted predictions and shuffled-label control.",
                                      "If collecting a larger independent study, document participant, acquisition and recording relationships before capture; matching class coverage alone is not statistical validation."]
         return report
-    X = np.array([feature_vector(t) for t in trials], dtype=float)
     folds = [(np.arange(len(trials)), np.arange(len(trials)))] if exploratory else list(StratifiedGroupKFold(n_splits=2, shuffle=True, random_state=42).split(X, y, groups))
     if any(len(set(y[a])) < 2 or len(set(y[b])) < 2 for a, b in folds):
         return insufficient("Training withheld: fixed grouped folds do not contain both classes. Collect a more balanced set of independent groups; no test-informed split search is performed.")

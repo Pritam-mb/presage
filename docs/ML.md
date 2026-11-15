@@ -1,5 +1,8 @@
 # Local Model Lab
 
+Current reproducibility repair: the desktop loader now accepts both legacy direct-trial files and report envelopes through the same validation. It restores all 27 existing trials without rewriting them. The earlier envelope-only subset reproduced the reported 7/50 on 11 eligible trials. Training now canonicalizes trial order and emits a labeled-feature fingerprint. Restored and reference inputs produce identical controls: current 20/50 on 13 eligible trials. This supersedes earlier snapshot counts; none is an accuracy estimate. Restart the app and retrain or import the current report. Reversing the same input order is regression-tested to leave fitted outputs and the control unchanged.
+
+
 Updated November 15, 2026. Model Lab is an experimental classifier of capture conditions, **not a liveness verifier**, authentication system or deepfake detector. The master updates explicitly keep ML as a way to inspect what a small dataset supports and where its models fail.
 
 ## Two distinct modes

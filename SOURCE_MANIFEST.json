@@ -29,7 +29,7 @@
     },
     {
       "file": "src/ml-ui.js",
-      "sha256": "de38fb2074ef6b19aefa2339e375400cda8283083d52f06be34dfef579924392"
+      "sha256": "e0a6208775f5e040c4b99255709f7e278ca9183c708d94670e595d3129adb24c"
     },
     {
       "file": "src/ml.css",
@@ -61,7 +61,7 @@
     },
     {
       "file": "src/storage.cjs",
-      "sha256": "6c9240f7dea8f33159177290ced43fafbeade6ddaed4e9c47d102de8366c7f5a"
+      "sha256": "27a12c7d4b05f86ec7d1247dab4620b1f85a117d423d13766d366a29978996d9"
     },
     {
       "file": "src/style.css",
@@ -217,7 +217,7 @@
     },
     {
       "file": "test/storage.test.cjs",
-      "sha256": "80f968cd60d6a78895514111e23bd25791d92843154ec7ae23ecf2b57edc74a8"
+      "sha256": "dc78d32698edaf71827e5ecbd3ba084985d95fca0c190cf8c941035a23c59180"
     },
     {
       "file": "test/support/fixture.cjs",
@@ -237,11 +237,11 @@
     },
     {
       "file": "ml/test_pipeline.py",
-      "sha256": "e56fe1fd8aecf578b25e59aa62025325372fa8cb748706f7732384789be4c58c"
+      "sha256": "c2e025b7597f4871d7904b31266db5f1045570892097c9762bde03206a49d453"
     },
     {
       "file": "ml/train.py",
-      "sha256": "215edea715d7a9c7f9e009af678ebbb533014b4437ee380bd031f3b418963e9a"
+      "sha256": "f66dd4b8368c61c3c361505869adcb6fef525326d3d55bc78a74e04aa6467e4d"
     },
     {
       "file": ".github/workflows/checks.yml",
@@ -261,7 +261,7 @@
     },
     {
       "file": "MVP.md",
-      "sha256": "488a1f6f2a1a8fe44179c9047e82286380bf8a181e86becaf104325785301651"
+      "sha256": "3df93d2e8d7fb1b86064194cf7870d4b0ac0c93ba35b6b7c713e55744625af13"
     },
     {
       "file": ".gitignore",
@@ -285,7 +285,7 @@
     },
     {
       "file": "docs/NEXT_STEPS.md",
-      "sha256": "a5b8937407745115c8687a22cb410847019ce774977afb04cd5b9b30a2735a3d"
+      "sha256": "ee06b64299cd8c82b1f8ba47f95b1be7f4ea42f17803e671374360a0a9531050"
     },
     {
       "file": "docs/HARNESS_AMENDMENTS.md",
@@ -333,7 +333,7 @@
     },
     {
       "file": "docs/ML.md",
-      "sha256": "f2596235bef39e4d706919d26496188764ca7531d5aa50c8b46411fc3c5e2517"
+      "sha256": "9211536ee8b1cd3a15fb6897a1da5385a831ba1c7042fecdf19aa4b91be64404"
     },
     {
       "file": "docs/EXPERIMENT.md",

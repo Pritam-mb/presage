@@ -27,6 +27,18 @@ def dataset():
 
 
 class PipelineTests(unittest.TestCase):
+    def test_input_order_does_not_change_training_control_or_feature_fingerprint(self):
+        d=dataset();d['trials']=d['trials'][:8]
+        a=evaluate_report(d,mode='exploratory')
+        d['trials'].reverse()
+        b=evaluate_report(d,mode='exploratory')
+        self.assertEqual(a['dataset']['featureFingerprint'],b['dataset']['featureFingerprint'])
+        self.assertEqual(a['shuffledLabelControl'],b['shuffledLabelControl'])
+        self.assertEqual(a['models'],b['models'])
+        d['trials'][0]['samples'][0]['value']+=5
+        changed=evaluate_report(d,mode='exploratory')
+        self.assertNotEqual(a['dataset']['featureFingerprint'],changed['dataset']['featureFingerprint'])
+
     def test_exploratory_fit_is_explicitly_training_only(self):
         d=dataset();d['trials']=d['trials'][:8]
         strict=evaluate_report(d)

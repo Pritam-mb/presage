@@ -13,7 +13,7 @@ The controlling updates call SpoofLab a testing laboratory, **not a liveness ver
 5. Open **05 Policy Arena**. Choose a frozen policy and saved trial, evaluate it, read the decision trace, then reveal its declared condition. The policy receives measurements only. An unissued blink challenge is not evaluable; it is not an assumed pass or fail.
 6. Open **03 Evidence Report**. Check attempts, completed/incomplete duration, original experimental outcomes and the separate frozen-policy table. Keep failed and inconclusive attempts visible. Completed duration does not mean measurements were quality-qualified.
 
-The saved November 15 dataset contains 27 attempts and 19 completed trials. The saved exploratory report uses 13 eligible trials and its control is 21 of 50 shuffled-label fits matching or exceeding the real-label training fit. These are dated artifact observations, not hardcoded UI values or generalization evidence; newly generated reports may change them.
+After the legacy-loader repair, close/reopen the desktop app and confirm that it restores all 27 trials with zero unreadable files. The current canonical-order report uses 13 eligible trials and its control is 20 of 50. The earlier partial restoration produced 7 of 50 on 11 eligible trials; the earlier reference-order snapshot was 21 of 50. These counts describe different input/order snapshots, not accuracy. Current reports show an input fingerprint; compare that and eligible counts before comparing runs.
 
 ## What strict ML can and cannot do
 
