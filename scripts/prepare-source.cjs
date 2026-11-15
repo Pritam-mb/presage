@@ -7,7 +7,7 @@ function walk(relative){const base=path.join(root,relative);if(!fs.existsSync(ba
  const name=path.join(relative,entry.name);if(entry.isDirectory())walk(name);else if(/\.(?:js|cjs|py|css|html|md|txt|ya?ml)$/.test(name))files.push(name);
 }}
 for(const dir of ['src','scripts','test','ml','.github'])walk(dir);
-for(const name of ['package.json','package-lock.json','README.md','MVP.md','.gitignore','.env.example','protocols/frozen-v1.json','fixtures/sanitized-example.json','LICENSE','docs/PRIVACY.md','docs/THREAT_MODEL.md','docs/EXPERIMENTS.md','docs/ML_LIMITATIONS.md','docs/ORIGINALITY.md','docs/CAMERA.md','docs/ML.md','docs/EXPERIMENT.md','docs/SUBMISSION.md','docs/DEV_POST.template.md','docs/DEMO_VIDEO.md'])if(fs.existsSync(path.join(root,name)))files.push(name);
+for(const name of ['package.json','package-lock.json','README.md','MVP.md','.gitignore','.env.example','protocols/frozen-v1.json','fixtures/sanitized-example.json','LICENSE','docs/harness.md','docs/addon_spec.md','docs/POST.template.md','docs/ANALYSIS_CUT.md','docs/PRIVACY.md','docs/THREAT_MODEL.md','docs/EXPERIMENTS.md','docs/ML_LIMITATIONS.md','docs/ORIGINALITY.md','docs/CAMERA.md','docs/ML.md','docs/EXPERIMENT.md','docs/SUBMISSION.md','docs/DEV_POST.template.md','docs/DEMO_VIDEO.md'])if(fs.existsSync(path.join(root,name)))files.push(name);
 const env=fs.existsSync(path.join(root,'.env'))?parseEnv(fs.readFileSync(path.join(root,'.env'),'utf8')):{};
 const secrets=Object.values(env).filter(v=>v.length>=8);
 for(const name of files){const text=fs.readFileSync(path.join(root,name),'utf8');if(secrets.some(v=>text.includes(v)))throw new Error('Configured secret found in public source: '+name);}

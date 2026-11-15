@@ -27,4 +27,15 @@ Use recorded SDK output only when clearly labeled as replay. Do not substitute t
 
 ## Consent and Data Handling draft
 
-SpoofLab requires consent before live capture or recorded-file processing. The application does not record video or audio. SDK telemetry is explicitly disabled; SDK authentication and runtime network requirements still apply. The API key and trial evidence remain in memory unless the operator explicitly exports a report. Reports contain physiological values, timestamps, confidence/stability, validation/error logs, notes, consent attestations and source metadata. Operators are responsible for participant consent, sharing scope and deleting exported reports and separately recorded source files. The app uses no AI service or app analytics. Imported evidence is unauthenticated. This experiment makes no medical or production security claims.
+SpoofLab requires consent before live capture or recorded-file processing. The application does not record video or audio. SDK telemetry is explicitly disabled; SDK authentication and runtime network requirements still apply. Desktop trial measurements and metadata are automatically stored locally in data/trials/ and restored at startup. Clear all deletes that store; separately exported files, camera diagnostics and analysis artifacts require separate deletion. A key saved in .env persists there until removed. Reports contain physiological values, timestamps, confidence/stability, validation/error logs, notes, consent attestations and source metadata. Operators are responsible for participant consent, sharing scope and deleting exported reports and separately recorded source files. The app uses no AI service or app analytics. Imported evidence is unauthenticated. This experiment makes no medical or production security claims.
+
+
+## Manual attestations ? not yet signed
+
+- [ ] M1: second-person consent screen and data-handling review; reviewer/date pending.
+- [ ] M2: official privacy page quotation, URL and read date reviewed by operator.
+- [ ] M3: finished demo watched; changing live SDK values visible. Do not set video_shows_live_signal before this.
+- [ ] M4: originality re-scan within 48 hours of submission; actual findings/date pending.
+- [ ] M5: token-derived post checked against three generated summary values; reviewer/date pending.
+
+Submission is deferred. No public URLs, publication consent or manual sign-off have been fabricated.

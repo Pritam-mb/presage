@@ -388,6 +388,27 @@
   function renderEvidence() {
     const sums = trials.map(t=>P.summarize(t));
     $('total-trials').textContent = trials.length;
+    const completedCount=trials.filter(t=>t.endReason==='completed'&&t.durationSec>=t.protocol.durationSec-.25).length;
+    $('total-completed').textContent=completedCount;
+    $('total-incomplete').textContent=trials.length-completedCount;
+    const frozen=$('frozen-policy-summary');frozen.replaceChildren();
+    if(!trials.length)frozen.append(node('p','No saved observations to evaluate.'));
+    else if(window.SpoofPolicies){
+      const table=node('table'),thead=node('thead'),body=node('tbody'),head=node('tr');for(const label of ['Condition','Frozen policy','Pass','Fail','Abstain','n'])head.append(node('th',label));thead.append(head);table.append(thead,body);
+      const byCondition=new Map();
+      for(const trial of trials){
+        const measurements=window.SpoofPolicies.fromTrialMeasurements(trial);
+        for(const policy of window.SpoofPolicies.POLICIES){
+          const decision=window.SpoofPolicies.evaluate(policy.id,measurements).decision;
+          const key=trial.condition+'|'+policy.id;
+          if(!byCondition.has(key))byCondition.set(key,{condition:trial.condition,policy:policy.id,pass:0,fail:0,abstain:0,n:0});
+          const row=byCondition.get(key);row[decision]++;row.n++;
+        }
+      }
+      for(const result of byCondition.values()){const row=node('tr');for(const value of [P.CONDITIONS[result.condition],result.policy,result.pass,result.fail,result.abstain,result.n])row.append(node('td',value));body.append(row);}
+      frozen.append(table,node('p',window.SpoofPolicies.LIMITATION,'field-help'));
+    }
+
     for (const kind of ['accepted','rejected','inconclusive']) $(`total-${kind}`).textContent = sums.filter(s=>s.verifier.outcome===kind).length;
     $('empty').hidden = !!trials.length; $('trials').replaceChildren();
     const filter = $('filter').value;

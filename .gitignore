@@ -21,3 +21,5 @@ evidence/analysis/
 artifacts/
 evidence/**
 !evidence/summary.json
+
+harness-report.json

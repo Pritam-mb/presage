@@ -34,6 +34,9 @@ async function evaluate(expression){const r=await send('Runtime.evaluate',{expre
   await send('DOM.enable');const doc=await send('DOM.getDocument');const input=await send('DOM.querySelector',{nodeId:doc.root.nodeId,selector:'#import-file'});await send('DOM.setFileInputFiles',{nodeId:input.nodeId,files:[fixture]});
   for(let i=0;i<100;i++){if(await evaluate('document.querySelector("#total-trials").textContent === "2"'))break;await delay(50);}
   assert.equal(await evaluate('document.querySelector("#total-trials").textContent'),'2');
+  assert.equal(await evaluate('Number(document.querySelector("#total-completed").textContent)+Number(document.querySelector("#total-incomplete").textContent)'),2);
+  assert.equal(await evaluate('document.querySelectorAll("#frozen-policy-summary tbody tr").length > 0'),true);
+
   assert.equal(await evaluate('document.querySelector("#total-accepted").textContent'),'1');
   assert.equal(await evaluate('document.querySelector("#total-inconclusive").textContent'),'1');
   assert.equal(await evaluate('document.querySelector("#export-json").disabled'),false);
@@ -114,7 +117,7 @@ async function evaluate(expression){const r=await send('Runtime.evaluate',{expre
     await send('DOM.setFileInputFiles',{nodeId:mlInput.nodeId,files:[exploratoryFile]});
     for(let i=0;i<100;i++){if(await evaluate('document.querySelector("#ml-results").textContent.includes("Training-data exploration")'))break;await delay(50);}
     assert.equal(await evaluate('document.querySelector("#ml-results").textContent.includes("Training-data exploration")'),true);
-    assert.equal(await evaluate('document.querySelector("#ml-results").textContent.includes("Shuffled-label training control")'),true);
+    assert.equal(await evaluate('document.querySelector("#ml-headline").textContent.includes("Shuffled-label training control")'),true);
     assert.equal(await evaluate('!!document.querySelector("#ml-inspector table")'),true);
     assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth'),true);
   }

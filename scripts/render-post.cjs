@@ -52,5 +52,5 @@ function main(){
   fs.writeFileSync(path.join(ROOT,'docs','DEV_POST.md'),result,'utf8');
   console.log('Generated docs/DEV_POST.md from evidence/summary.json; published:false. No raw trial files read.');
 }
-if(require.main===module){try{main();}catch(error){console.error(error.message);process.exitCode=1;}}
+if(require.main===module){try{require('./build-post.cjs');}catch(error){console.error(error.message);process.exitCode=1;}}
 module.exports={render,validateSummary,table,pulseTable};

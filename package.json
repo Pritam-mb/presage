@@ -16,8 +16,18 @@
     "harness": "node scripts/harness.cjs",
     "test:ml": "python -m unittest discover -s ml -p test_*.py",
     "check": "node scripts/check.cjs",
-    "audit:evidence": "node scripts/audit-evidence.cjs"
+    "audit:evidence": "node scripts/audit-evidence.cjs",
+    "summarize": "node scripts/summarize.cjs",
+    "post": "node scripts/build-post.cjs",
+    "harness:final": "node scripts/harness.cjs --final",
+    "analyze": "node scripts/analyze.cjs",
+    "traces": "node scripts/evaluate-policies.cjs"
   },
-  "dependencies": { "@smartspectra/node-sdk": "latest" },
-  "devDependencies": { "electron": "latest", "esbuild": "latest" }
+  "dependencies": {
+    "@smartspectra/node-sdk": "latest"
+  },
+  "devDependencies": {
+    "electron": "latest",
+    "esbuild": "latest"
+  }
 }

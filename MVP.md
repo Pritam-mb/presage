@@ -1,5 +1,10 @@
 # SpoofLab — Evidence-first MVP
 
+Latest v3 integration: reference files now found as docs/harness.md and docs/addon_spec.md. Active harness preserves supplied checks and adds G7?G10. A1/A2 outputs and 81 saved policy traces generated; Evidence Report cards and dynamic Model Lab control headline implemented. 43 tests, build/syntax and browser workflow pass. A1 has zero confirmed recording pairs (same-person comparisons remain descriptive); A2 is conditional simulation over four timelines. Optional leakage demo is NO-GO without required series. The token-built POST.md remains unpublished. Original trial evidence unchanged.
+
+Remaining hard gates need resolution: license choice, protected all-historical-live >=25 FPS check versus keeping failed attempts, and claim-scanner false positives. No protected thresholds or word lists changed. Public consent/manual reviews/video are deferred. Do not call final readiness complete.
+
+
 ## Current controlling MVP ? November 15, 2026
 
 SPOOFLAB_MASTER_HANDOFF.md controls current work; older sections below are historical. Implemented: capture/evidence/local ML plus three frozen source-blind policies and Policy Arena (05), saved-trial hidden-condition evaluation/reveal, live preset preparation and automatic post-capture policy evaluation, decision-trace export and descriptive scoreboard with Wilson intervals. New captures include scenario/camera.pipeline fields. Policy output is pass/fail/abstain; it does not establish input provenance or human presence.
