@@ -8,6 +8,11 @@ const ml=read('evidence/analysis/exploratory-fit.json'),control=ml.shuffledLabel
 if(!control||control.runs!==50||control.matchOrExceedReal!==control.shuffledLabelMatches.filter(n=>n>=control.realLabelMatches).length)throw new Error('Unverified shuffled-label control');
 summary.research={shuffled_matches:control.matchOrExceedReal,shuffled_runs:control.runs,exploratory_trials:control.trainingTrials,
  limitations:'Training-data exploration only; not accuracy on new sessions. Counts describe dependent trials, not independent people.'};
+const strictPath=path.join(root,'evidence/analysis/evaluation.json');
+if(fs.existsSync(strictPath)){
+ const strict=read('evidence/analysis/evaluation.json'),audit=strict.dataset?.independentEvidenceAudit;
+ if(audit){summary.research.strict_status=strict.status;summary.research.mixed_groups=audit.mixedGroups;summary.research.total_groups=audit.totalGroups;summary.research.minimum_mixed_groups=audit.minimumMixedGroups;}
+}
 for(const [name,file]of [['paired','paired.json'],['challenge','challenge-tradeoff.json']]){
  const absolute=path.join(root,'evidence/analysis',file);
  if(fs.existsSync(absolute)){

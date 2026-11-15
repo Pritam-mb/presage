@@ -1,5 +1,10 @@
 # SpoofLab — Evidence-first MVP
 
+Verified local state: 46 Node tests, 12 Python tests, build/syntax, browser workflows and real desktop-to-Python ML checks pass. Working-stage hard gates pass. Captured evidence remains unchanged; exploratory fits are available while strict independent performance is intentionally withheld. Manual submission reviews/video/publication remain deferred. See PROGRESS.md and docs/NEXT_STEPS.md.
+
+Current ML refinement: matches the updates' capture-condition classifier scope. Real exploratory fitting remains available on 13 eligible records with a 21/50 shuffled-control headline, explanations and optional XGBoost inspection. Strict mode explicitly withholds grouped performance because only two of four connected groups contain both classes; matched-groups-v2 adds an operational audit, not scientific validation. Policy thresholds and raw evidence are unchanged. Mode-specific reports stay in memory when switching; current app instructions are docs/NEXT_STEPS.md. No additional captures are required for the present descriptive product. Submission is deferred.
+
+
 ## Authorized harness correction and licensing - November 15, 2026
 
 Owner authorized the proposed choices. Added MIT LICENSE for source only. Original reference code remains archived unchanged; the active amended runner is scripts/harness-runtime.cjs, documented in docs/HARNESS_AMENDMENTS.md. Schema/consent/identifier validation retains all historical attempts; three low/unknown-FPS live attempts are reported as quality-limited. They cannot satisfy the successful live baseline, which still needs saved delivered FPS >=25, >=60 seconds and signal output. The separate >=25 FPS / >=6-second real diagnostic and every frozen measurement-policy threshold remain unchanged. No real trial was edited or removed.

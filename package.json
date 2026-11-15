@@ -14,7 +14,7 @@
     "source:prepare": "node scripts/prepare-source.cjs",
     "post:render": "node scripts/render-post.cjs",
     "harness": "node scripts/harness.cjs",
-    "test:ml": "python -m unittest discover -s ml -p test_*.py",
+    "test:ml": "node scripts/test-ml.cjs",
     "check": "node scripts/check.cjs",
     "audit:evidence": "node scripts/audit-evidence.cjs",
     "summarize": "node scripts/summarize.cjs",

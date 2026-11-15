@@ -51,7 +51,7 @@ These are overlapping Monte Carlo draws from a few recordings, not new trials or
 
 **{{summary.research.shuffled_matches}} / {{summary.research.shuffled_runs}}** shuffled-label fits matched or exceeded the real-label training fit across **{{summary.research.exploratory_trials}}** eligible trials. The control illustrates why training fit is uninformative about new sessions. It is not a significance test. Logistic regression is the default; the optional boosted model is an overfitting inspection.
 
-Grouped evaluation is distinct from this training-data exploration. Source/class confounding and related recordings limit any operationally computed score; meeting a software fold requirement does not establish independent validation. No generalization claim is made.
+Strict evaluation reports **{{summary.research.strict_status}}**: only **{{summary.research.mixed_groups}} of {{summary.research.total_groups}} connected groups** contain both live and non-live observations, below the operational minimum of **{{summary.research.minimum_mixed_groups}} mixed groups**. It withholds held-out performance. This matched-group safeguard was added after reviewing the dataset; it is not a preregistered scientific result. It does not alter the exploratory fit or the frozen measurement policies. No generalization claim is made.
 
 ## Consent and Data Handling
 

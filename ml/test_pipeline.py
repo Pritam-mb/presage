@@ -74,6 +74,37 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(r["status"], "insufficient_data")
         self.assertEqual(r["models"], [])
 
+    def test_single_class_groups_do_not_establish_independent_evidence(self):
+        d = dataset()
+        # The original trial/group minima and global class balance are met,
+        # but each source group now appears in only one class.
+        for i, t in enumerate(d["trials"]):
+            t["condition"] = "live" if i // 4 % 2 == 0 else "injected_replay"
+        r = evaluate_report(d)
+        self.assertEqual(r["status"], "insufficient_data")
+        self.assertEqual(r["models"], [])
+        self.assertEqual(r["dataset"]["eligibleTrials"], 24)
+        self.assertEqual(r["dataset"]["excluded"], [])
+        audit = r["dataset"]["independentEvidenceAudit"]
+        self.assertEqual(audit["mixedGroups"], 0)
+        self.assertEqual(audit["singleClassGroups"], 6)
+        self.assertFalse(audit["readyForGroupedComparison"])
+        exploration = evaluate_report(d, mode="exploratory")
+        self.assertEqual(exploration["status"], "exploratory_fitted")
+        self.assertEqual(exploration["dataset"]["independentEvidenceAudit"], audit)
+
+    def test_two_mixed_plus_two_pure_groups_are_retained_but_not_ready(self):
+        d = dataset(); d["trials"] = d["trials"][:16]
+        for i, t in enumerate(d["trials"]):
+            if i >= 8:
+                t["condition"] = "live" if i < 12 else "injected_replay"
+        r = evaluate_report(d)
+        self.assertEqual(r["status"], "insufficient_data")
+        self.assertEqual(r["dataset"]["independentGroups"], 4)
+        self.assertEqual(r["dataset"]["independentEvidenceAudit"]["mixedGroups"], 2)
+        self.assertEqual(r["dataset"]["eligibleTrials"], 16)
+        self.assertEqual(r["splits"], [])
+
     def test_recording_hash_links_participants(self):
         a, b, c = fixture(0), fixture(1), fixture(2)
         a["source"]["sha256"] = b["source"]["sha256"] = "abc"
@@ -90,6 +121,8 @@ class PipelineTests(unittest.TestCase):
     def test_end_to_end_group_split_and_contribution_additivity(self):
         r = evaluate_report(dataset())
         self.assertEqual(r["status"], "evaluated")
+        self.assertEqual(r["dataset"]["independentEvidenceAudit"]["mixedGroups"], 6)
+        self.assertTrue(r["dataset"]["independentEvidenceAudit"]["readyForGroupedComparison"])
         for split in r["splits"]:
             self.assertFalse(set(split["trainGroups"]) & set(split["testGroups"]))
             self.assertFalse(set(split["trainTrialIds"]) & set(split["testTrialIds"]))

@@ -20,6 +20,16 @@ function additions(root,options={}){
  const reviewed=Date.parse(originality.match(/^Review completed at:\s*(\S+)/im)?.[1]||'');
  add('G5.6','Completed originality review within 48 hours (final only)',!!options.final,Number.isFinite(reviewed)&&reviewed<=Date.now()&&Date.now()-reviewed<=48*36e5&&/https:\/\//.test(originality)&&/proof of breath/i.test(originality),'Requires actual dated review, source links and comparison; placeholder mentions do not satisfy this gate.');
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'reference','ml-gate.cjs'),'utf8'),{exists,read,add,JSON});
+ const windowGate=results.find(g=>g.id==='G7.1');if(windowGate&&!exists('evidence/ml/results.json'))windowGate.name='Optional window-leakage demo not used (allowed)';
+ const exploratoryPath='evidence/analysis/exploratory-fit.json',strictPath='evidence/analysis/evaluation.json';
+ const hasExploratory=exists(exploratoryPath),hasStrict=exists(strictPath);
+ let mlEvidenceOK=false;
+ if(hasExploratory&&hasStrict){try{
+  const parser=require('../src/ml-ui.js').parseEvaluation;
+  const exploratory=parser(read(exploratoryPath)),strict=parser(read(strictPath));
+  mlEvidenceOK=exploratory.status==='exploratory_fitted'&&exploratory.evaluationMode==='training_only'&&exploratory.shuffledLabelControl?.runs===50&&!!exploratory.dataset.independentEvidenceAudit&&['evaluated','insufficient_data'].includes(strict.status)&&!!strict.dataset.independentEvidenceAudit;
+ }catch{}}
+ add('G7.2','Local exploratory and strict ML evidence is consistent',hasExploratory||hasStrict,mlEvidenceOK,'Checks prediction/contribution provenance, shuffled controls and matched-group guard. Optional window-leakage results are separate.');
  const testFile=path.join(root,'test','policies.test.cjs');
  const source=path.join(root,'src','policies.cjs');
  let signatureOK=false,testOK=false;

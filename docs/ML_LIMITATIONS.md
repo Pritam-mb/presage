@@ -10,6 +10,8 @@ The shuffled-label control fits 50 logistic models after permuting row labels wh
 
 The strict grouped mode is an independent-evidence check. It must decline unsupported performance claims when grouping is inadequate or class/source confounding prevents a meaningful comparison. A mechanically valid split alone does not establish a valid scientific design. The current data include people who appear only in photo or replay conditions, so identity, source processing and condition may be confounded.
 
+The `matched-groups-v2` operational safeguard requires four connected groups containing both eligible live and non-live trials, in addition to the existing trial/class minima and fixed fold checks. Single-class groups remain counted; they cannot replace those matched groups. This safeguard was added after reviewing the existing dataset and is not preregistered validation. It does not change frozen measurement-policy thresholds or tune a model to improve its score. Current strict reports withhold performance, while exploratory fits remain available. Older grouped reports without this audit must be regenerated before import.
+
 ## Data and leakage
 
 Participant, session, recording and shared-file relationships must be honest. All derivatives of one recording stay connected; changing aliases does not create independence. Condition, source type, path, filename and participant identity are not predictor features. Source metadata may only define the labels, audit groups and post-decision comparison.

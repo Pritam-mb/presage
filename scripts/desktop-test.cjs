@@ -3,8 +3,8 @@ const fs=require('node:fs');const path=require('node:path');const net=require('n
 const {connect}=require('./cdp.cjs');
 const root=path.resolve(__dirname,'..');let child,socket;let seq=0;const pending=new Map();
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-function send(method,params={}){const id=++seq;return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{pending.delete(id);reject(new Error('Desktop CDP timeout: '+method));},15000);pending.set(id,{resolve:r=>{clearTimeout(timer);resolve(r);},reject:e=>{clearTimeout(timer);reject(e);}});socket.send(JSON.stringify({id,method,params}));});}
-async function evaluate(expression){const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw new Error('Desktop renderer exception during startup verification.');return r.result.value;}
+function send(method,params={},timeoutMs=15000){const id=++seq;return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{pending.delete(id);reject(new Error('Desktop CDP timeout: '+method));},timeoutMs);pending.set(id,{resolve:r=>{clearTimeout(timer);resolve(r);},reject:e=>{clearTimeout(timer);reject(e);}});socket.send(JSON.stringify({id,method,params}));});}
+async function evaluate(expression,timeoutMs){const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true},timeoutMs);if(r.exceptionDetails)throw new Error('Desktop renderer exception during startup verification.');return r.result.value;}
 (async()=>{
   const server=net.createServer();await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const port=server.address().port;await new Promise(resolve=>server.close(resolve));
   fs.mkdirSync(path.join(root,'artifacts'),{recursive:true});const fd=fs.openSync(path.join(root,'artifacts','desktop-runtime.log'),'a');
@@ -22,14 +22,20 @@ async function evaluate(expression){const r=await send('Runtime.evaluate',{expre
   await evaluate('new Promise((resolve,reject)=>{const s=document.createElement("script");s.src="../dist/sdk.js";s.onload=()=>resolve(true);s.onerror=()=>reject(new Error("Adapter failed to load"));document.head.append(s);})');
   assert.equal(await evaluate('typeof window.SpoofSDK?.SmartSpectraSDK'), 'function');
   assert.equal(await evaluate('typeof window.SpoofMLBridge?.train'),'function');
-  const training=await evaluate('window.SpoofMLBridge.train({schema:"spooflab-evidence-v2",trials:[]})');
+  console.log('Desktop local Python check started; no camera access.');
+  // Desktop training has a 120-second subprocess limit; allow that response to arrive.
+  const training=await evaluate('window.SpoofMLBridge.train({schema:"spooflab-evidence-v2",trials:[]})',130000);
   assert.equal(training.status,'insufficient_data','Empty datasets must not fabricate performance results');
   const realDataset=path.join(root,'evidence','analysis','consolidated-dataset.json');
   if(fs.existsSync(realDataset)){
-    const dataset=JSON.parse(fs.readFileSync(realDataset,'utf8'));dataset.trials=dataset.trials.filter(t=>t.ml?.datasetConsent===true);
-    const exploratory=await evaluate(`window.SpoofMLBridge.train(${JSON.stringify(dataset)},'exploratory')`);
+    const dataset=JSON.parse(fs.readFileSync(realDataset,'utf8'));const compact=require('../src/ml-ui.js').datasetForTraining(dataset.trials);
+    console.log('Checking exploratory training through desktop IPC.');
+    const exploratory=await evaluate(`window.SpoofMLBridge.train(${JSON.stringify(compact)},'exploratory')`,130000);
     assert.equal(exploratory.status,'exploratory_fitted');assert.equal(exploratory.evaluationMode,'training_only');
     assert.equal(exploratory.models.length,2);assert.equal(exploratory.splits[0].testTrialIds.length,0);
+    const grouped=await evaluate(`window.SpoofMLBridge.train(${JSON.stringify(compact)},'grouped')`,130000);
+    assert.ok(grouped.dataset.independentEvidenceAudit,'Strict mode must audit mixed connected groups');
+    if(grouped.dataset.independentEvidenceAudit.status==='insufficient'){assert.equal(grouped.status,'insufficient_data');assert.equal(grouped.models.length,0);}
     console.log('Desktop exploratory training IPC passed with consented real records; no held-out scores claimed.');
   }
   // Compare only presence, never print or return the key itself.

@@ -129,6 +129,27 @@ def metrics(predictions):
                 correct=int((pred == y).sum()), accuracy=float((pred == y).mean()), brier=float(brier_score_loss(y, prob)), calibration=bins)
 
 
+def independence_audit(groups, labels):
+    """A conservative project readiness rule, not proof of statistical validity.
+
+    A connected group is declared provenance, not an independently verified
+    participant. Count eligible classes within groups; never remove a pure
+    group just to make a balanced-looking evaluation dataset.
+    """
+    classes = collections.defaultdict(set)
+    for group, label in zip(groups, labels):
+        classes[str(group)].add(int(label))
+    mixed = sum(values == {0, 1} for values in classes.values())
+    live_only = sum(values == {1} for values in classes.values())
+    non_live_only = sum(values == {0} for values in classes.values())
+    return dict(version="matched-groups-v2", status="ready" if mixed >= 4 else "insufficient", minimumMixedGroups=4,
+                mixedGroups=mixed, singleClassGroups=live_only + non_live_only, totalGroups=len(classes),
+                liveOnlyGroups=live_only, nonLiveOnlyGroups=non_live_only,
+                eligibleLiveTrials=int(np.sum(labels == 1)), eligibleNonLiveTrials=int(np.sum(labels == 0)),
+                readyForGroupedComparison=mixed >= 4,
+                interpretation="Operational readiness requires four declared connected groups with both live and non-live eligible trials. This reduces class/group confounding; it does not establish matched acquisition, independent provenance, generalization or liveness.")
+
+
 def evaluate_report(data, mode="grouped"):
     if mode not in ("grouped", "exploratory"):
         raise ValueError("Unknown training mode")
@@ -149,9 +170,10 @@ def evaluate_report(data, mode="grouped"):
     # Link through excluded records too: removing a low-quality bridge must not conceal shared provenance.
     all_groups = dict(zip([t["trialId"] for t in data["trials"]], connected_groups(data["trials"])))
     groups = np.array([all_groups[t["trialId"]] for t in trials]); y = np.array([int(t["condition"] == "live") for t in trials])
+    audit = independence_audit(groups, y)
     result = dict(schema="spooflab-ml-evaluation-v1", status="insufficient_data", generatedAt=datetime.now(timezone.utc).isoformat(),
                   featureNames=FEATURES, featureVersion="time-bins-v1", probabilityCalibration="uncalibrated", decisionThreshold=.5,
-                  dataset=dict(totalTrials=len(data["trials"]), eligibleTrials=len(trials), excluded=excluded, independentGroups=len(set(groups))),
+                  dataset=dict(totalTrials=len(data["trials"]), eligibleTrials=len(trials), excluded=excluded, independentGroups=len(set(groups)), independentEvidenceAudit=audit),
                   splits=[], models=[], recommendations=[], narrative="", limitations=LIMITATIONS,
                   software=dict(numpy=np.__version__, sklearn=sklearn.__version__, xgboost=xgb.__version__), seed=42)
     def insufficient(message):
@@ -165,6 +187,12 @@ def evaluate_report(data, mode="grouped"):
         return insufficient("Exploratory fitting requires at least two eligible trials of each class. No independent evaluation is performed.")
     if not exploratory and (len(trials) < 12 or len(set(groups)) < 4 or len(set(y)) < 2):
         return insufficient("Training withheld: require at least 12 eligible trials, four independent connected groups and both classes. These are operational minima, not statistical validation.")
+    if not exploratory and not audit["readyForGroupedComparison"]:
+        report = insufficient(f"Independent evaluation withheld: only {audit['mixedGroups']} of {len(set(groups))} declared connected groups contain both live and non-live eligible trials; require at least four such groups under matched-groups-v2. Single-class groups can confound source/person with class. All eligible records remain counted. Exploratory fitting is still available and makes no generalization claim.")
+        report["recommendations"] = [f"The independent-evidence protocol needs {4 - audit['mixedGroups']} more declared connected groups with eligible live and non-live conditions before grouped comparison. Repeated windows or renamed aliases do not establish new groups.",
+                                     "No additional people are required to keep the present descriptive case study and exploratory training. Continue inspecting the existing fitted predictions and shuffled-label control.",
+                                     "If collecting a larger independent study, document participant, acquisition and recording relationships before capture; matching class coverage alone is not statistical validation."]
+        return report
     X = np.array([feature_vector(t) for t in trials], dtype=float)
     folds = [(np.arange(len(trials)), np.arange(len(trials)))] if exploratory else list(StratifiedGroupKFold(n_splits=2, shuffle=True, random_state=42).split(X, y, groups))
     if any(len(set(y[a])) < 2 or len(set(y[b])) < 2 for a, b in folds):

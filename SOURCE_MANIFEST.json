@@ -29,7 +29,7 @@
     },
     {
       "file": "src/ml-ui.js",
-      "sha256": "1080e00fd84e686e23011bbd3efde8b81b9ab3e051a67304736cf7e3cdc0eb91"
+      "sha256": "de38fb2074ef6b19aefa2339e375400cda8283083d52f06be34dfef579924392"
     },
     {
       "file": "src/ml.css",
@@ -81,7 +81,7 @@
     },
     {
       "file": "scripts/browser-test.cjs",
-      "sha256": "3131bebd9016aed684945c76aa70c35f0a9f6850806bd292ea27bb6c92ee1af5"
+      "sha256": "078731b123cda8a1b7c415bb32ee562e7eaccd9045bde45c2856bcb434f54241"
     },
     {
       "file": "scripts/build-post.cjs",
@@ -101,11 +101,11 @@
     },
     {
       "file": "scripts/desktop-test.cjs",
-      "sha256": "68a2e8c3df2264564bca2e6afb5e30e5d326bc1aa686a4c923491d8aeaa5ead8"
+      "sha256": "4fa64852d1d8b94e71b1bd6204c14fcb35a08549f0e8a401ffed4f64fef78aa5"
     },
     {
       "file": "scripts/enrich-summary.cjs",
-      "sha256": "97c24b6c2d37751f4624effaa9e5253417d1a87c26ab27da4c7b0330c7bdc38d"
+      "sha256": "29cca1ad0109db569c01a233b0cdcd1246b77e5f7761eaa8fb280ee9dbdeb953"
     },
     {
       "file": "scripts/evaluate-policies.cjs",
@@ -121,7 +121,7 @@
     },
     {
       "file": "scripts/harness.cjs",
-      "sha256": "28d646701b90653b205830df9afc1df76d4d7c779150347b5f382c951895ded1"
+      "sha256": "9c57106ba1f835037cf6c96edc3b29f772bb6fb4a94aadc8d0f76ecdf8fcbcf7"
     },
     {
       "file": "scripts/launch.cjs",
@@ -137,7 +137,7 @@
     },
     {
       "file": "scripts/prepare-source.cjs",
-      "sha256": "7e85630bcaca0ee82b0691a63361ec9f31c00e8df2f231ba9b545f759468863f"
+      "sha256": "ff246dcb31ec6f5ce94905403eef6ad85def8b095f2d8be41ec832c16916f137"
     },
     {
       "file": "scripts/preview.cjs",
@@ -168,6 +168,10 @@
       "sha256": "5474802503541ddadf7ce7b8246beb4ef20d7c0356fcb0f6f4cdafc11c32d053"
     },
     {
+      "file": "scripts/test-ml.cjs",
+      "sha256": "a85374d44438ffe99d9dc812e5b4a111dce1496f1cb62f4a8453caf237a54f81"
+    },
+    {
       "file": "test/analyses.test.cjs",
       "sha256": "0c4d8332e2c28f3d67688507012bc4f8025661ac19ff769f253683d4bd2284a6"
     },
@@ -193,7 +197,7 @@
     },
     {
       "file": "test/ml-ui.test.cjs",
-      "sha256": "45c720377aa9041c90e98f9525a9a4663dc27fe86d579a05a958e71fed650a44"
+      "sha256": "6f8386dc8c3a3a036a689c12c6366e1223a45d98023c90ffa222f2de8850f780"
     },
     {
       "file": "test/policies.test.cjs",
@@ -233,11 +237,11 @@
     },
     {
       "file": "ml/test_pipeline.py",
-      "sha256": "d45cd0c9847c51469ac1eee0235d0afd5f8010b6b881122c51fb9f6190a31e37"
+      "sha256": "e56fe1fd8aecf578b25e59aa62025325372fa8cb748706f7732384789be4c58c"
     },
     {
       "file": "ml/train.py",
-      "sha256": "bb3413231cb0880aef683b54f71680b843c8845b89db5d8996b439bcf6181007"
+      "sha256": "215edea715d7a9c7f9e009af678ebbb533014b4437ee380bd031f3b418963e9a"
     },
     {
       "file": ".github/workflows/checks.yml",
@@ -245,7 +249,7 @@
     },
     {
       "file": "package.json",
-      "sha256": "ece2c8398b693ff97266414abc6708bb44193f8b2cddcabd2d8b6603f1523632"
+      "sha256": "bbb09a307e5d27f06f6d2aaf6b41f280d239d68dfee47f2d5fbb375b54b5e7b3"
     },
     {
       "file": "package-lock.json",
@@ -253,11 +257,11 @@
     },
     {
       "file": "README.md",
-      "sha256": "670f479aa31c92613eba59a19295f087ea996d0576c606d350580c67baacf786"
+      "sha256": "607385bc3420310d189a516559253f662a7e4303b1c158d2edb5815fb12dc028"
     },
     {
       "file": "MVP.md",
-      "sha256": "b1180b624a6edbb2b0e03a72bf687fd1b7df4da26020b75fc37b71c83f838d39"
+      "sha256": "488a1f6f2a1a8fe44179c9047e82286380bf8a181e86becaf104325785301651"
     },
     {
       "file": ".gitignore",
@@ -280,6 +284,10 @@
       "sha256": "719a496d7adc4a245d62872cbb341f5767212410bdb145586f28c34c7de82204"
     },
     {
+      "file": "docs/NEXT_STEPS.md",
+      "sha256": "a5b8937407745115c8687a22cb410847019ce774977afb04cd5b9b30a2735a3d"
+    },
+    {
       "file": "docs/HARNESS_AMENDMENTS.md",
       "sha256": "d3cb780361e5575789281d2793a00670f4c1c3de626aa5c8b20c589513ed4e85"
     },
@@ -293,7 +301,7 @@
     },
     {
       "file": "docs/POST.template.md",
-      "sha256": "69d8311cbd5103b65697d1a89b623df1283d0c9d4df56470a1a892e1662e4917"
+      "sha256": "fa54a994e4bdfcbaf710e40e94b75de6748c4c97c757e6ff56fe7fdfb0f60757"
     },
     {
       "file": "docs/ANALYSIS_CUT.md",
@@ -313,7 +321,7 @@
     },
     {
       "file": "docs/ML_LIMITATIONS.md",
-      "sha256": "f550bd6d49d2ebf323362cdcff6f59a9219734a5f05647d8831d6157ed7a4c59"
+      "sha256": "738507569b978f60e9f4d69e0858b86adfa5df3031d3af532069d55d76032d40"
     },
     {
       "file": "docs/ORIGINALITY.md",
@@ -325,7 +333,7 @@
     },
     {
       "file": "docs/ML.md",
-      "sha256": "7a204c81bcab9829158186d157456e4892c37ba9b3e121da9b1dc189e770be49"
+      "sha256": "f2596235bef39e4d706919d26496188764ca7531d5aa50c8b46411fc3c5e2517"
     },
     {
       "file": "docs/EXPERIMENT.md",

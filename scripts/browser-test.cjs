@@ -110,6 +110,11 @@ async function evaluate(expression){const r=await send('Runtime.evaluate',{expre
   assert.equal(await evaluate('!!document.getElementById("ml-trial")'),true,'Trial selector must exist');
   assert.equal(await evaluate('!!document.getElementById("ml-dataset-consent")'),true,'Consent checkbox must exist');
   assert.equal(await evaluate('document.getElementById("ml-results").children.length > 0'),true,'Evaluation placeholder must be rendered');
+  assert.equal(await evaluate('document.querySelector("#ml-cli-command").textContent.includes("--mode exploratory")'),true);
+  await evaluate('document.querySelector("#ml-training-mode").value="grouped";document.querySelector("#ml-training-mode").dispatchEvent(new Event("change"))');
+  assert.equal(await evaluate('document.querySelector("#ml-cli-command").textContent.includes("--mode grouped")'),true);
+  await evaluate('document.querySelector("#ml-training-mode").value="exploratory";document.querySelector("#ml-training-mode").dispatchEvent(new Event("change"))');
+
   assert.equal(await evaluate('document.getElementById("ml-dataset-count").textContent.includes("0 of 3")'),true,'Dataset count must reflect current trials');
   const exploratoryFile=path.join(root,'evidence','analysis','exploratory-fit.json');
   if(fs.existsSync(exploratoryFile)){
@@ -120,6 +125,21 @@ async function evaluate(expression){const r=await send('Runtime.evaluate',{expre
     assert.equal(await evaluate('document.querySelector("#ml-headline").textContent.includes("Shuffled-label training control")'),true);
     assert.equal(await evaluate('!!document.querySelector("#ml-inspector table")'),true);
     assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth'),true);
+  }
+
+  const strictFile=path.join(root,'evidence','analysis','evaluation.json');
+  if(fs.existsSync(strictFile)){
+    const strictDoc=await send('DOM.getDocument'),strictInput=await send('DOM.querySelector',{nodeId:strictDoc.root.nodeId,selector:'#ml-evaluation-file'});
+    await send('DOM.setFileInputFiles',{nodeId:strictInput.nodeId,files:[strictFile]});
+    const strict=JSON.parse(fs.readFileSync(strictFile,'utf8'));
+    for(let i=0;i<100;i++){if(await evaluate(`document.querySelector("#ml-results").textContent.includes(${JSON.stringify(strict.status.replaceAll('_',' '))})`))break;await delay(50);}
+    assert.equal(await evaluate('!!document.querySelector("#ml-independent-evidence")'),true);
+    if(strict.status==='insufficient_data')assert.equal(await evaluate('!!document.querySelector("#ml-inspector")'),false,'Withheld evaluation must not render performance predictions');
+    if(fs.existsSync(exploratoryFile)){
+      await evaluate('document.querySelector("#ml-training-mode").value="exploratory";document.querySelector("#ml-training-mode").dispatchEvent(new Event("change"))');
+      assert.equal(await evaluate('document.querySelector("#ml-headline").textContent.includes("Shuffled-label training control")'),true,'Switching modes must retain the fitted exploratory report in memory');
+    }
+
   }
   await evaluate('document.querySelector("[data-view=arena]").click();document.querySelector("#arena-policy").value="pulse-only-v1";[...document.querySelectorAll("#view-arena button")].find(b=>b.textContent==="Prepare live arena trial").click();window.__defer=false;document.querySelector("#start").click()');
   for(let i=0;i<100;i++){if(await evaluate('document.querySelector("#status").textContent.includes("Collecting real SDK")'))break;await delay(20);}
