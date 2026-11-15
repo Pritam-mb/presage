@@ -1,0 +1,20 @@
+{
+  "schema": "spooflab-frozen-policy-spec-v1",
+  "status": "specification-frozen-before-engine-implementation",
+  "frozenFrom": "SPOOFLAB_MASTER_HANDOFF.md",
+  "protocol": {
+    "defaultDurationSec": 90,
+    "pulseWarmupSec": 12,
+    "breathingWarmupSec": 30,
+    "cameraMinimumFps": 25,
+    "cameraDiagnosticMinimumSec": 6
+  },
+  "policies": [
+    {"id": "pulse-only-v1", "minimumPostWarmupPulseEstimates": 10},
+    {"id": "quality-gated-v1", "requires": "pulse-only-v1", "minimumStableFraction": 0.5, "maximumValidationErrorFrameFraction": 0.2},
+    {"id": "pulse-plus-blink-v1", "requires": "quality-gated-v1", "requiresFreshChallengeIssuedDuringTrial": true, "missingChallengeDecision": "abstain"}
+  ],
+  "decisions": ["pass", "fail", "abstain"],
+  "forbiddenPolicyInputs": ["condition", "source", "recording_id"],
+  "requiredLimitation": "Input provenance not established. Not proof of live human presence."
+}

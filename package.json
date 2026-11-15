@@ -1,0 +1,23 @@
+{
+  "name": "spooflab",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Consented SmartSpectra signal and replay evaluation laboratory",
+  "main": "src/main.cjs",
+  "scripts": {
+    "build": "esbuild src/sdk-adapter.js --bundle --platform=browser --outfile=dist/sdk.js && esbuild src/preload.cjs --bundle --platform=node --external:electron --outfile=dist/preload.cjs",
+    "start": "npm run build && node scripts/launch.cjs",
+    "preview": "node scripts/preview.cjs",
+    "test": "node --test test/*.test.cjs",
+    "test:browser": "node scripts/browser-test.cjs",
+    "test:desktop": "node scripts/desktop-test.cjs",
+    "source:prepare": "node scripts/prepare-source.cjs",
+    "post:render": "node scripts/render-post.cjs",
+    "harness": "node scripts/harness.cjs",
+    "test:ml": "python -m unittest discover -s ml -p test_*.py",
+    "check": "node scripts/check.cjs",
+    "audit:evidence": "node scripts/audit-evidence.cjs"
+  },
+  "dependencies": { "@smartspectra/node-sdk": "latest" },
+  "devDependencies": { "electron": "latest", "esbuild": "latest" }
+}

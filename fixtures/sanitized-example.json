@@ -1,0 +1,6 @@
+{
+  "schema": "spooflab-evidence-v2",
+  "synthetic": true,
+  "description": "Schema illustration only. No participant data or experimental result.",
+  "trials": []
+}
