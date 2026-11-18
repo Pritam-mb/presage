@@ -156,5 +156,35 @@ class PipelineTests(unittest.TestCase):
                              input=json.dumps({"schema": "spooflab-evidence-v2", "trials": []}), text=True, capture_output=True, check=True)
         self.assertEqual(json.loads(run.stdout)["status"], "insufficient_data")
 
+    def test_leave_one_group_out_reports_folds_and_descriptive_interval(self):
+        d = dataset(); d["trials"] = d["trials"][:16]
+        r = evaluate_report(d, mode="loocv")
+        self.assertEqual(r["status"], "limits_report")
+        self.assertEqual(r["evaluationMode"], "logo_limits")
+        self.assertEqual(r["models"], [])
+        self.assertEqual(r["splits"], [])
+        limits = r["logoLimits"]
+        self.assertEqual(len(limits["folds"]), r["dataset"]["independentGroups"])
+        self.assertEqual([f["group"] for f in limits["folds"]], list(range(1, len(limits["folds"]) + 1)))
+        self.assertEqual(sum(f["live"] + f["nonLive"] for f in limits["folds"]), r["dataset"]["eligibleTrials"])
+        measured = [f["auc"] for f in limits["folds"] if f["status"] == "measured"]
+        self.assertEqual(limits["mixedGroupsScored"], len(measured))
+        self.assertTrue(all(0 <= a <= 1 for a in measured))
+        for fold in limits["folds"]:
+            self.assertEqual(fold["status"] == "measured", fold["auc"] is not None)
+        self.assertAlmostEqual(limits["meanWithinGroupAuc"], sum(measured) / len(measured))
+        low, high = limits["descriptiveInterval"]
+        self.assertLessEqual(low, high)
+        self.assertEqual(limits["trainingControl"]["runs"], 50)
+        self.assertGreaterEqual(len(r["recommendations"]), 1)
+        json.dumps(r, allow_nan=False)
+
+    def test_leave_one_group_out_is_insufficient_for_a_single_group(self):
+        d = dataset()
+        for t in d["trials"]: t["ml"]["participantId"] = "one-person"
+        r = evaluate_report(d, mode="loocv")
+        self.assertEqual(r["status"], "insufficient_data")
+        self.assertEqual(r["evaluationMode"], "logo_limits")
+        self.assertNotIn("logoLimits", r)
 
 if __name__ == "__main__": unittest.main()

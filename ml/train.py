@@ -13,7 +13,7 @@ import numpy as np
 import sklearn
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import brier_score_loss
+from sklearn.metrics import brier_score_loss, roc_auc_score
 from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.preprocessing import StandardScaler
 import xgboost as xgb
@@ -150,8 +150,89 @@ def independence_audit(groups, labels):
                 interpretation="Operational readiness requires four declared connected groups with both live and non-live eligible trials. This reduces class/group confounding; it does not establish matched acquisition, independent provenance, generalization or liveness.")
 
 
+def shuffled_label_control(features, labels, real_matches):
+    real_matches = int(real_matches)
+    rng = np.random.default_rng(42)
+    counts, unchanged = [], 0
+    for _ in range(50):
+        shuffled = rng.permutation(labels)
+        unchanged += int(np.array_equal(shuffled, labels))
+        control = LogisticRegression(C=1.0, max_iter=1000, random_state=42).fit(features, shuffled)
+        counts.append(int(np.sum(control.predict(features) == shuffled)))
+    return dict(model="Logistic regression", runs=50, seed=42, trainingTrials=len(labels),
+        realLabelMatches=real_matches, shuffledLabelMatches=counts,
+        matchOrExceedReal=sum(n >= real_matches for n in counts), unchangedPermutations=unchanged,
+        interpretation="Training-data exploration. Labels are shuffled across trial rows with class counts fixed. This is not a significance test or a group-aware null model.")
+
+
+def evaluate_limits(result, X, y, groups):
+    result["evaluationMode"] = "logo_limits"
+    result["limitations"] = [
+        "Each connected group is held out in turn. Participant, recording and acquisition differences can still confound the results.",
+        "The interval resamples the observed mixed groups with fitted scores fixed. With few groups it is descriptive and omits model refit uncertainty.",
+        "The shuffled-label control describes training fit only and does not test held-out performance.",
+    ]
+    result["narrative"] = "Leave-one-group-out needs at least two connected groups and both labels."
+    if len(set(groups)) < 2 or len(set(y)) < 2:
+        return result
+
+    folds, pooled_labels, pooled_scores = [], [], []
+    for group in sorted(set(groups)):
+        train = groups != group
+        test = ~train
+        fold = dict(group=len(folds) + 1, live=int(y[test].sum()),
+                    nonLive=int(test.sum() - y[test].sum()), auc=None, status="training_one_class")
+        folds.append(fold)
+        if len(set(y[train])) < 2:
+            continue
+        imputer = SimpleImputer(strategy="median", keep_empty_features=True)
+        scaler = StandardScaler()
+        features = scaler.fit_transform(imputer.fit_transform(X[train]))
+        model = LogisticRegression(C=1.0, max_iter=1000, random_state=42).fit(features, y[train])
+        scores = model.predict_proba(scaler.transform(imputer.transform(X[test])))[:, 1]
+        pooled_labels.extend(y[test])
+        pooled_scores.extend(scores)
+        fold["status"] = "held_out_one_class"
+        if len(set(y[test])) == 2:
+            fold.update(status="measured", auc=float(roc_auc_score(y[test], scores)))
+
+    aucs = [fold["auc"] for fold in folds if fold["auc"] is not None]
+    interval = None
+    if len(aucs) >= 2:
+        draws = np.random.default_rng(42).choice(aucs, size=(5000, len(aucs)), replace=True)
+        interval = np.quantile(draws.mean(axis=1), [.025, .975]).tolist()
+    features = StandardScaler().fit_transform(SimpleImputer(strategy="median", keep_empty_features=True).fit_transform(X))
+    full_fit = LogisticRegression(C=1.0, max_iter=1000, random_state=42).fit(features, y)
+    real_matches = np.sum((full_fit.predict_proba(features)[:, 1] >= .5) == y)
+    result["status"] = "limits_report"
+    mean_auc = float(np.mean(aucs)) if aucs else None
+    result["logoLimits"] = dict(folds=folds, mixedGroupsScored=len(aucs),
+        meanWithinGroupAuc=mean_auc, descriptiveInterval=interval,
+        pooledAuc=float(roc_auc_score(pooled_labels, pooled_scores)) if len(set(pooled_labels)) == 2 else None,
+        trainingControl=shuffled_label_control(features, y, real_matches))
+    result["recommendations"] = [
+        "Collect live and non-live trials inside every new group so each held-out group can be scored.",
+        "Do not tune on these held-out scores; fix the evaluation rules before adding groups.",
+        "Report the number of scored groups next to any headline AUC; with few groups the interval is descriptive only.",
+    ]
+    result["narrative"] = (
+        f"Leave-one-group-out yielded within-group AUC for {len(aucs)} of {len(folds)} connected groups. "
+    )
+    if mean_auc is not None:
+        result["narrative"] += f"The equally weighted mean within-group AUC was {mean_auc:.3f}. "
+    if interval is not None:
+        result["narrative"] += f"The descriptive 95% group-resampling interval was {interval[0]:.3f} to {interval[1]:.3f}. "
+        if interval[0] <= .5 <= interval[1]:
+            result["narrative"] += "The interval includes chance (0.500), so these records do not show within-group discrimination. "
+    result["narrative"] += (
+        f"{result['logoLimits']['trainingControl']['matchOrExceedReal']} of 50 shuffled-label fits matched or exceeded "
+        "the real-label training fit. Treat this as a limits result, not an estimate of new-session performance."
+    )
+    return result
+
+
 def evaluate_report(data, mode="grouped"):
-    if mode not in ("grouped", "exploratory"):
+    if mode not in ("grouped", "exploratory", "loocv"):
         raise ValueError("Unknown training mode")
     if not isinstance(data, dict) or data.get("schema") != "spooflab-evidence-v2" or not isinstance(data.get("trials"), list):
         raise ValueError("Expected a spooflab-evidence-v2 report")
@@ -185,6 +266,8 @@ def evaluate_report(data, mode="grouped"):
                   software=dict(numpy=np.__version__, sklearn=sklearn.__version__, xgboost=xgb.__version__), seed=42)
     result["dataset"]["featureFingerprint"] = fingerprint
     result["dataset"]["ordering"] = "trial_id_ascending_v2"
+    if mode == "loocv":
+        return evaluate_limits(result, X, y, groups)
     def insufficient(message):
         result["narrative"] = message
         result["recommendations"] = ["Collect completed, consenting measurements from independent participant/recording groups with both live and non-live conditions.",
@@ -255,19 +338,8 @@ def evaluate_report(data, mode="grouped"):
                 result["recommendations"].append(message)
         # A training-fit control only: row-label shuffling preserves class counts,
         # not participant exchangeability. It is not a permutation significance test.
-        rng = np.random.default_rng(42)
         real_matches = sum(p["correct"] for p in result["models"][0]["predictions"])
-        counts = []
-        unchanged = 0
-        for _ in range(50):
-            shuffled = rng.permutation(y)
-            unchanged += int(np.array_equal(shuffled, y))
-            control = LogisticRegression(C=1.0, max_iter=1000, random_state=42).fit(a_scaled, shuffled)
-            counts.append(int(np.sum(control.predict(a_scaled) == shuffled)))
-        result["shuffledLabelControl"] = dict(model="Logistic regression", runs=50, seed=42,
-            trainingTrials=len(trials), realLabelMatches=int(real_matches), shuffledLabelMatches=counts,
-            matchOrExceedReal=sum(n >= real_matches for n in counts), unchangedPermutations=unchanged,
-            interpretation="Training-data exploration. It says nothing about new sessions. Labels are shuffled across trial rows with class counts fixed; this is not a significance test or a group-aware null model.")
+        result["shuffledLabelControl"] = shuffled_label_control(a_scaled, y, real_matches)
         for model in result["models"]:
             for key in ("accuracy", "brier", "calibration"):
                 model["metrics"].pop(key, None)
@@ -278,7 +350,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path, nargs="?"); parser.add_argument("--stdin", action="store_true")
     parser.add_argument("--output", required=True)
-    parser.add_argument("--mode", choices=["grouped", "exploratory"], default="grouped")
+    parser.add_argument("--mode", choices=["grouped", "exploratory", "loocv"], default="grouped")
     args = parser.parse_args()
     if args.stdin == bool(args.input): parser.error("Provide either an input path or --stdin")
     output = None if args.output == "-" else Path(args.output)

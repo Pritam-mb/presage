@@ -3,7 +3,7 @@ const path=require('node:path');
 const fs=require('node:fs');
 const localPython=path.join(__dirname,'..','.venv',process.platform==='win32'?'Scripts':'bin',process.platform==='win32'?'python.exe':'python');
 function trainLocal(dataset,{python=process.env.SPOOFLAB_PYTHON||(fs.existsSync(localPython)?localPython:'python'),timeoutMs=120000,mode='grouped'}={}) {
-  if(!['grouped','exploratory'].includes(mode))throw new Error('Unknown training mode');
+  if(!['grouped','exploratory','loocv'].includes(mode))throw new Error('Unknown training mode');
   const payload=JSON.stringify(dataset);
   if(payload.length>25_000_000||dataset?.schema!=='spooflab-evidence-v2'||!Array.isArray(dataset.trials)||dataset.trials.length>300)throw new Error('Invalid training dataset or size limit exceeded.');
   if(dataset.trials.some(t=>t.ml?.datasetConsent!==true))throw new Error('Every training record must have explicit dataset consent.');

@@ -46,10 +46,10 @@
   function draw(samples = [], duration = 60) {
     const canvas = $('chart'), ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#1c2a1b'; ctx.fillRect(0, 0, w * P.PROTOCOL.warmupSec / duration, h);
-    ctx.strokeStyle = '#263b24'; ctx.lineWidth = 1;
+    ctx.fillStyle = '#292440'; ctx.fillRect(0, 0, w * P.PROTOCOL.warmupSec / duration, h);
+    ctx.strokeStyle = '#293852'; ctx.lineWidth = 1;
     for (let y = 20; y < h; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
-    ctx.strokeStyle = '#c2df99'; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.strokeStyle = '#b9a4ff'; ctx.lineWidth = 2; ctx.beginPath();
     let last = null;
     for (const s of samples) {
       if (!Number.isFinite(s.value)) continue;

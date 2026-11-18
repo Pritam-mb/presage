@@ -24,7 +24,27 @@
   function parseEvaluation(text){
     if(typeof text!=='string'||text.length>25_000_000)throw new Error('Evaluation report exceeds the 25 MB limit.');
     const r=JSON.parse(text);
-    if(r?.schema!=='spooflab-ml-evaluation-v1'||!['evaluated','insufficient_data','exploratory_fitted'].includes(r.status)||!Array.isArray(r.models)||r.models.length>10||!Array.isArray(r.featureNames)||r.featureNames.length>200)throw new Error('Unsupported evaluation report.');
+    if(r?.schema!=='spooflab-ml-evaluation-v1'||!['evaluated','insufficient_data','exploratory_fitted','limits_report'].includes(r.status)||!Array.isArray(r.models)||r.models.length>10||!Array.isArray(r.featureNames)||r.featureNames.length>200)throw new Error('Unsupported evaluation report.');
+    if(r.status==='limits_report'){
+      const limits=r.logoLimits;
+      const auc=n=>finite(n)&&n>=0&&n<=1;
+      const nullableAuc=n=>n===null||auc(n);
+      const count=n=>Number.isInteger(n)&&n>=0;
+      const control=limits?.trainingControl;
+      if(r.evaluationMode!=='logo_limits'||r.models.length||r.splits?.length||
+        !Array.isArray(limits?.folds)||limits.folds.length>300||limits.folds.length!==r.dataset?.independentGroups||
+        limits.folds.some((f,i)=>f?.group!==i+1||!count(f.live)||!count(f.nonLive)||!nullableAuc(f.auc)||
+          !['measured','held_out_one_class','training_one_class'].includes(f.status)||(f.status==='measured')!==(f.auc!==null))||
+        limits.folds.reduce((n,f)=>n+f.live+f.nonLive,0)!==r.dataset?.eligibleTrials||
+        limits.mixedGroupsScored!==limits.folds.filter(f=>f.auc!==null).length||
+        !nullableAuc(limits.meanWithinGroupAuc)||!nullableAuc(limits.pooledAuc)||
+        (limits.descriptiveInterval!==null&&(!Array.isArray(limits.descriptiveInterval)||limits.descriptiveInterval.length!==2||
+          !limits.descriptiveInterval.every(auc)||limits.descriptiveInterval[0]>limits.descriptiveInterval[1]))||
+        control?.runs!==50||!count(control.matchOrExceedReal)||control.matchOrExceedReal>50)
+        throw new Error('Invalid leave-one-group-out report.');
+    }else if(r.evaluationMode==='logo_limits'&&r.status!=='insufficient_data'){
+      throw new Error('Invalid leave-one-group-out status.');
+    }
     const exploratory=r.status==='exploratory_fitted';
     if(exploratory && r.evaluationMode!=='training_only')throw new Error('Exploratory reports must declare training-only scope.');
     if(r.featureNames.some(f=>typeof f!=='string'||f.length>100)||new Set(r.featureNames).size!==r.featureNames.length)throw new Error('Invalid feature names.');
@@ -86,14 +106,14 @@
     const exportButton=button('Export consented dataset ↓',()=>{if(isBusy())return notify('Stop capture before exporting.');const selected=getTrials().filter(eligibleMetadata);if(!selected.length)return notify('No trials have complete grouping and explicit dataset consent.');download(JSON.stringify(datasetForTraining(selected),null,2),'application/json','json');notify(`Exported ${selected.length} consented trials. Technical/quality exclusions and group sufficiency are checked by the Python trainer.`);});
     const actions=el('div',null,'action-row');actions.append(save,revoke,exportButton);panel.append(actions);const count=el('p',null,'field-help');count.id='ml-dataset-count';panel.append(count);view.append(panel);
     const modeField=field('TRAINING MODE','ml-training-mode','select');
-    modeField.input.append(option('exploratory','Exploratory fit - training data only'),option('grouped','Strict grouped check - held-out evidence'));
+    modeField.input.append(option('exploratory','Exploratory fit - training data only'),option('loocv','Limits analysis - leave one group out'),option('grouped','Strict grouped check - held-out evidence'));
     let trainingActive=false;
     const trainButton=button('Train locally (uses consented trials)',async()=>{
       if(trainingActive||isBusy())return notify('Stop capture or wait for the active training job.');
       if(!window.SpoofMLBridge?.train)return notify('In-app training requires the desktop app. Use dataset export and the local command below.');
       const selected=getTrials().filter(eligibleMetadata);if(!selected.length)return notify('Add complete group aliases and explicit dataset consent first.');
       trainingActive=true;trainButton.disabled=true;modeField.input.disabled=true;notify('Training local models with consented trials. No cloud service is contacted.');
-      try{const result=await window.SpoofMLBridge.train(datasetForTraining(selected),modeField.input.value);setEvaluation(parseEvaluation(JSON.stringify(result)));notify(evaluation.status==='exploratory_fitted'?'Exploratory models fitted. Predictions below use training records, not unseen data.':evaluation.status==='evaluated'?'Grouped evaluation finished. Inspect held-out predictions below.':'Insufficient eligible data for the selected mode. See the report below.');}
+      try{const result=await window.SpoofMLBridge.train(datasetForTraining(selected),modeField.input.value);setEvaluation(parseEvaluation(JSON.stringify(result)));notify(evaluation.status==='limits_report'?'Limits analysis finished. Inspect results by held-out group below.':evaluation.status==='exploratory_fitted'?'Exploratory models fitted. Predictions below use training records, not unseen data.':evaluation.status==='evaluated'?'Grouped evaluation finished. Inspect held-out predictions below.':'Insufficient eligible data for the selected mode. See the report below.');}
       catch(error){notify(`Local training failed: ${error.message}`);}finally{trainingActive=false;modeField.input.disabled=false;trainButton.disabled=!window.SpoofMLBridge?.train;}
     });
     trainButton.id='ml-train';trainButton.disabled=!window.SpoofMLBridge?.train;
@@ -102,7 +122,7 @@
     const results=el('section',null,'panel');results.append(el('h2','3 / Inspect model behavior'));const input=el('input');input.id='ml-evaluation-file';input.type='file';input.accept='.json,application/json';const label=el('label','IMPORT LOCAL EVALUATION JSON');label.htmlFor=input.id;results.append(label,input);
     const clear=button('Clear imported evaluation',()=>{evaluations.delete(modeField.input.value);evaluation=null;renderEvaluation();notify('Evaluation cleared from memory. Files on disk are unchanged.');});results.append(clear);const output=el('div');output.id='ml-results';results.append(output);view.append(results);
     input.addEventListener('change',async()=>{try{if(isBusy())throw new Error('Stop capture before importing evaluations.');const file=input.files[0];if(!file||file.size>25_000_000)throw new Error('Choose an evaluation JSON file no larger than 25 MB.');setEvaluation(parseEvaluation(await file.text()));notify('Evaluation imported and consistency checked. Imported evidence and split labels remain unauthenticated.');}catch(error){notify(`Import failed: ${error.message}`);}finally{input.value='';}});
-    function setEvaluation(report){const mode=report.evaluationMode==='training_only'?'exploratory':'grouped';evaluations.set(mode,report);evaluation=report;modeField.input.value=mode;updateCommand();renderEvaluation();}
+    function setEvaluation(report){const mode=report.evaluationMode==='logo_limits'?'loocv':report.evaluationMode==='training_only'?'exploratory':'grouped';evaluations.set(mode,report);evaluation=report;modeField.input.value=mode;updateCommand();renderEvaluation();}
     function notify(text){status.textContent=text;}
     function current(){return getTrials().find(t=>t.trialId===selectField.input.value);}
     function loadFields(){const t=current();for(const [k,input]of Object.entries(fields))input.value=t?.ml?.[k]||'';check.checked=t?.ml?.datasetConsent===true;}
@@ -110,7 +130,25 @@
     function refresh(){const previous=selectField.input.value;selectField.input.replaceChildren();const trials=getTrials();for(const t of trials)selectField.input.append(option(t.trialId,`${t.trialId.slice(0,12)} / ${t.condition}${t.ml?.datasetConsent?' / consented':''}`));if(trials.some(t=>t.trialId===previous))selectField.input.value=previous;const eligible=trials.filter(eligibleMetadata).length;count.textContent=`${eligible} of ${trials.length} trials have complete metadata and dataset consent. Training eligibility is checked separately.`;save.disabled=revoke.disabled=!trials.length;exportButton.disabled=!eligible;loadFields();}
     function renderEvaluation(){output.replaceChildren();headline.replaceChildren();if(!evaluation){headline.append(el('h2','Does fitting these records mean anything?'),el('p','Import an exploratory report or train locally to see the shuffled-label control. No scores are displayed until measured results are loaded.'));output.append(el('p','No model evaluation loaded. No synthetic scores or findings are displayed.','empty-state'));return;}
       const r=evaluation;const trainingOnly=r.status==='exploratory_fitted';const scope=trainingOnly?'Training':'Held-out';
-      if(!trainingOnly){headline.append(el('h2',r.status==='insufficient_data'?'Not enough independent evidence':'Grouped holdout report'),el('p',r.status==='insufficient_data'?'The evaluator has declined to produce model performance. Adding repeated windows does not create new people or recordings.':'The operational split checks passed. This does not remove source/class confounding or establish reliable predictions on new sessions. Inspect limitations and split provenance.'));}
+      if(r.status==='limits_report'){
+        const limits=r.logoLimits;
+        const format=n=>n===null?'Unavailable':n.toFixed(3);
+        const interval=limits.descriptiveInterval?.map(format).join(' to ')??'Unavailable';
+        headline.append(el('h2','Mean within-group AUC'),el('strong',format(limits.meanWithinGroupAuc),'ml-headline-number'),
+          el('p',`Exploratory 95% group-resampling interval: ${interval}. AUC was measurable in ${limits.mixedGroupsScored} of ${limits.folds.length} held-out groups.`),
+          el('p',`Shuffled-label training control: ${limits.trainingControl.matchOrExceedReal} of 50 fits matched or exceeded the real-label training fit.`));
+        const table=el('table'),header=el('tr');
+        for(const name of ['Held-out group','Live','Non-live','AUC','Result'])header.append(el('th',name));
+        table.append(header);
+        const statuses={measured:'Scored',held_out_one_class:'Held-out set has one class',training_one_class:'Training set has one class'};
+        for(const fold of limits.folds){
+          const row=el('tr');
+          for(const value of [fold.group,fold.live,fold.nonLive,format(fold.auc),statuses[fold.status]])row.append(el('td',String(value)));
+          table.append(row);
+        }
+        const wrap=el('div',null,'table-wrap');wrap.append(table);
+        output.append(wrap,el('p',`Pooled AUC: ${format(limits.pooledAuc)}. This compares scores across different fitted models.`));
+      }else if(!trainingOnly){headline.append(el('h2',r.status==='insufficient_data'?'Not enough independent evidence':'Grouped holdout report'),el('p',r.status==='insufficient_data'?'The evaluator has declined to produce model performance. Adding repeated windows does not create new people or recordings.':'The operational split checks passed. This does not remove source/class confounding or establish reliable predictions on new sessions. Inspect limitations and split provenance.'));}
       if(trainingOnly)output.append(el('div','Training-data exploration. It says nothing about new sessions. These trials were used to fit the models.','notice'));
       output.append(el('p',`${r.status.replaceAll('_',' ')} · ${r.dataset.eligibleTrials} eligible of ${r.dataset.totalTrials} trials · ${r.dataset.independentGroups} connected provenance groups`),el('p',r.narrative));
       output.append(el('p',r.dataset.featureFingerprint?`Input fingerprint ${r.dataset.featureFingerprint.slice(0,16)} / canonical trial order / seed ${r.seed}. Compare this fingerprint when checking whether two runs used the same labeled feature inputs.`:'Legacy report without an input fingerprint. Re-run local training to obtain a reproducible snapshot.','field-help'));
