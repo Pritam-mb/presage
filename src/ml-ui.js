@@ -90,21 +90,24 @@
     function button(text,fn){const b=el('button',text);b.type='button';b.addEventListener('click',fn);return b;}
     function option(value,text){const n=el('option',text);n.value=value;return n;}
     function field(label,id,type='text'){const wrap=el('div'),l=el('label',label),input=el(type==='select'?'select':'input');input.id=id;l.htmlFor=id;if(type!=='select')input.type=type;wrap.append(l,input);return {wrap,input};}
-    const nav=el('button',null,'nav-button');nav.dataset.view='ml';nav.append(el('span','04'),doc.createTextNode('Model Lab'));doc.querySelector('nav').append(nav);
     const view=el('section',null,'view');view.id='view-ml';view.hidden=true;doc.querySelector('main').insertBefore(view,doc.querySelector('main > footer'));
-    const intro=el('div',null,'page-intro'),head=el('div');head.append(el('p','LOCAL LEARNING / EXPLORATORY EVIDENCE','eyebrow'),el('h1','Model Lab'),el('p','Start with the shuffled-label control, then inspect which measurements influenced each prediction.','lede'));intro.append(head);view.append(intro);
-    view.append(el('div','Experimental condition classifier. Model scores are uncalibrated and cannot establish identity, live presence or attack resistance. Training and reports remain local; no LLM or cloud service is used.','notice'));
-    const purpose=el('details');purpose.id='ml-purpose';purpose.append(el('summary','What does this ML classify?'),el('p','It learns differences between the live and non-live labels attached to your measured trials. Pulse availability, stability and capture quality can influence its scores. A replay can preserve the same physiological information as a live capture.'),el('p','The failure explorer keeps training predictions and feature contributions inspectable. No model score proves that someone is physically present. Use Policy Arena to test fixed assumptions; use Model Lab to inspect learned assumptions.'));view.append(purpose);
-    const status=el('p','No dataset exported or evaluation loaded.','status');status.id='ml-status';status.setAttribute('role','status');view.append(status);
-    const headline=el('section',null,'ml-headline');headline.id='ml-headline';headline.setAttribute('aria-label','Shuffled-label control headline');view.append(headline);
-    const panel=el('section',null,'panel');panel.append(el('h2','1 / Prepare consented groups'),el('p','Assign anonymous aliases to each trial. Reuse the same recording-group alias for a live source and all replays derived from it. Reuse participant and session aliases honestly; do not invent independent groups to satisfy training requirements.'));
+    const C=window.SpoofCharts;
+    const intro=el('div',null,'page-intro'),head=el('div');
+    head.append(el('h1','Model Lab'),el('p','Inspect how local models respond to recorded measurements.','lede'));
+    intro.append(head);view.append(intro);
+    const banner=el('div',null,'ml-scope');banner.append(C.icon('info'),el('span','Exploratory. Nothing here measures accuracy on new people.'));
+    const layout=el('div',null,'ml-layout'),main=el('div',null,'ml-main'),tools=el('aside',null,'ml-tools');
+    tools.setAttribute('aria-label','Local training controls');layout.append(main,tools);view.append(banner,layout);
+    const status=el('p','Ready to load a local evaluation.','ml-log');status.id='ml-status';status.setAttribute('role','status');
+    const headline=el('div',null,'ml-headline');headline.id='ml-headline';main.append(headline);
+    const panel=el('section',null,'panel');panel.append(el('p','Use the same recording group for a source and its replays. Use real session boundaries when assigning aliases.'));
     const selectField=field('TRIAL','ml-trial','select'),grid=el('div',null,'ml-fields');panel.append(selectField.wrap);const fields={};
     for(const [key,label] of [['participantId','PARTICIPANT ALIAS'],['sessionId','SESSION ALIAS'],['recordingGroupId','RECORDING GROUP']]){const f=field(label,`ml-${key}`);f.input.maxLength=80;fields[key]=f.input;grid.append(f.wrap);}panel.append(grid);
     const consent=el('label',null,'check-row'),check=el('input');check.type='checkbox';check.id='ml-dataset-consent';consent.append(check,el('span','I have explicit consent to include this trial’s physiological measurements and group aliases in a locally exported ML dataset.'));panel.append(consent);
     const save=button('Save trial metadata',()=>{if(isBusy())return notify('Stop capture before editing the dataset.');const trial=current();if(!trial)return;try{trial.ml=metadata({...Object.fromEntries(Object.entries(fields).map(([k,v])=>[k,v.value])),datasetConsent:check.checked});window.dispatchEvent(new CustomEvent('spooflab:metadata-changed',{detail:trial.trialId}));notify('Grouping and consent updated. Desktop changes are saved locally; check Evidence Report for save status.');refresh();}catch(error){notify(error.message);}});
     const revoke=button('Remove dataset consent',()=>{if(isBusy())return notify('Stop capture first.');const t=current();if(t){t.ml={...(t.ml||{}),datasetConsent:false};window.dispatchEvent(new CustomEvent('spooflab:metadata-changed',{detail:t.trialId}));check.checked=false;refresh();notify('This trial will be excluded from ML dataset export.');}});
     const exportButton=button('Export consented dataset ↓',()=>{if(isBusy())return notify('Stop capture before exporting.');const selected=getTrials().filter(eligibleMetadata);if(!selected.length)return notify('No trials have complete grouping and explicit dataset consent.');download(JSON.stringify(datasetForTraining(selected),null,2),'application/json','json');notify(`Exported ${selected.length} consented trials. Technical/quality exclusions and group sufficiency are checked by the Python trainer.`);});
-    const actions=el('div',null,'action-row');actions.append(save,revoke,exportButton);panel.append(actions);const count=el('p',null,'field-help');count.id='ml-dataset-count';panel.append(count);view.append(panel);
+    const actions=el('div',null,'action-row');actions.append(save,revoke,exportButton);panel.append(actions);const count=el('p',null,'field-help');count.id='ml-dataset-count';panel.append(count);
     const modeField=field('TRAINING MODE','ml-training-mode','select');
     modeField.input.append(option('exploratory','Exploratory fit - training data only'),option('loocv','Limits analysis - leave one group out'),option('grouped','Strict grouped check - held-out evidence'));
     let trainingActive=false;
@@ -112,104 +115,198 @@
       if(trainingActive||isBusy())return notify('Stop capture or wait for the active training job.');
       if(!window.SpoofMLBridge?.train)return notify('In-app training requires the desktop app. Use dataset export and the local command below.');
       const selected=getTrials().filter(eligibleMetadata);if(!selected.length)return notify('Add complete group aliases and explicit dataset consent first.');
-      trainingActive=true;trainButton.disabled=true;modeField.input.disabled=true;notify('Training local models with consented trials. No cloud service is contacted.');
+      trainingActive=true;trainButton.disabled=true;modeField.input.disabled=true;syncControls();notify('Training local models with consented trials. No cloud service is contacted.');
       try{const result=await window.SpoofMLBridge.train(datasetForTraining(selected),modeField.input.value);setEvaluation(parseEvaluation(JSON.stringify(result)));notify(evaluation.status==='limits_report'?'Limits analysis finished. Inspect results by held-out group below.':evaluation.status==='exploratory_fitted'?'Exploratory models fitted. Predictions below use training records, not unseen data.':evaluation.status==='evaluated'?'Grouped evaluation finished. Inspect held-out predictions below.':'Insufficient eligible data for the selected mode. See the report below.');}
-      catch(error){notify(`Local training failed: ${error.message}`);}finally{trainingActive=false;modeField.input.disabled=false;trainButton.disabled=!window.SpoofMLBridge?.train;}
+      catch(error){notify(`Local training failed: ${error.message}`);}finally{trainingActive=false;modeField.input.disabled=false;syncControls();}
     });
     trainButton.id='ml-train';trainButton.disabled=!window.SpoofMLBridge?.train;
-    const command=el('pre');command.id='ml-cli-command';function updateCommand(){command.textContent=String.raw`.venv\Scripts\python.exe ml/train.py "path/to/dataset.json" --mode ${modeField.input.value} --output "path/to/evaluation.json"`;}modeField.input.addEventListener('change',()=>{updateCommand();evaluation=evaluations.get(modeField.input.value)||null;renderEvaluation();notify(evaluation?'Restored this mode?s report from memory.':'No report loaded for this mode. Train locally or import its report.');});updateCommand();
-    const training=el('section',null,'panel');training.append(el('h2','2 / Train locally'),modeField.wrap,trainButton,el('p','The desktop button starts a local Python process using only consented trials. It sends no data to a cloud service. Export a dataset to retain it or use this command from the project folder:'),command,el('p','Exploratory mode fits and explains the existing training records. Strict mode additionally checks matched independent groups before any held-out evaluation. Small or confounded datasets produce an insufficient-data report in strict mode; this does not remove the exploratory models. Keep failed capture records in the original evidence ledger.'));view.append(training);
-    const results=el('section',null,'panel');results.append(el('h2','3 / Inspect model behavior'));const input=el('input');input.id='ml-evaluation-file';input.type='file';input.accept='.json,application/json';const label=el('label','IMPORT LOCAL EVALUATION JSON');label.htmlFor=input.id;results.append(label,input);
-    const clear=button('Clear imported evaluation',()=>{evaluations.delete(modeField.input.value);evaluation=null;renderEvaluation();notify('Evaluation cleared from memory. Files on disk are unchanged.');});results.append(clear);const output=el('div');output.id='ml-results';results.append(output);view.append(results);
-    const preparation=el('details',null,'ml-preparation');preparation.append(el('summary','Prepare trial groups and dataset consent'));panel.before(preparation);preparation.append(panel);
-    intro.after(headline);
-    input.addEventListener('change',async()=>{try{if(isBusy())throw new Error('Stop capture before importing evaluations.');const file=input.files[0];if(!file||file.size>25_000_000)throw new Error('Choose an evaluation JSON file no larger than 25 MB.');setEvaluation(parseEvaluation(await file.text()));notify('Evaluation imported and consistency checked. Imported evidence and split labels remain unauthenticated.');}catch(error){notify(`Import failed: ${error.message}`);}finally{input.value='';}});
+    const command=el('pre');command.id='ml-cli-command';function updateCommand(){command.textContent=String.raw`.venv\Scripts\python.exe ml/train.py "path/to/dataset.json" --mode ${modeField.input.value} --output "path/to/evaluation.json"`;}modeField.input.addEventListener('change',()=>{updateCommand();evaluation=evaluations.get(modeField.input.value)||null;renderEvaluation();notify(evaluation?'Restored this mode’s report from memory.':'No report loaded for this mode. Train locally or import its report.');});updateCommand();
+    const training=el('section',null,'panel ml-training'),segments=el('div',null,'ml-segments');
+    segments.setAttribute('role','group');segments.setAttribute('aria-label','Training mode');
+    modeField.wrap.hidden=true;
+    const modes=[['exploratory','Exploratory'],['loocv','Group limits'],['grouped','Strict']];
+    for(const [value,label] of modes){
+      const item=button(label,()=>{modeField.input.value=value;modeField.input.dispatchEvent(new Event('change'));});
+      item.dataset.mode=value;segments.append(item);
+    }
+    const reason=el('p',null,'field-help');
+    trainButton.className='primary';trainButton.setAttribute('aria-describedby','ml-train-reason');reason.id='ml-train-reason';
+    const cli=el('details');cli.append(el('summary','Local command'),command);
+    function syncControls(){
+      const eligible=getTrials().some(eligibleMetadata);
+      trainButton.disabled=trainingActive||isBusy()||!window.SpoofMLBridge?.train||!eligible;
+      trainButton.textContent=trainingActive?'Training locally…':'Train locally';
+      trainButton.setAttribute('aria-busy',String(trainingActive));
+      for(const control of segments.children){
+        control.disabled=trainingActive;
+        control.setAttribute('aria-pressed',String(control.dataset.mode===modeField.input.value));
+      }
+      reason.textContent=trainingActive?'Local Python process running.':isBusy()?'Finish capture before training.':!window.SpoofMLBridge?.train?'Open the desktop app for training. Saved evaluation files can be inspected here.':!eligible?'Assign grouping aliases and dataset consent to enable training.':'Training uses consented measurements on this device.';
+    }
+    training.append(el('h2','Local training'),segments,modeField.wrap,trainButton,reason,cli);
+    const imports=el('section',null,'panel ml-imports'),input=el('input');input.id='ml-evaluation-file';input.type='file';input.accept='.json,application/json';
+    const label=el('label','Evaluation file');label.htmlFor=input.id;
+    const clear=button('Clear current report',()=>{evaluations.delete(modeField.input.value);evaluation=null;renderEvaluation();notify('Report cleared from memory.');});
+    imports.append(el('h2','Report library'),label,input,clear);
+    const preparation=el('details',null,'panel ml-preparation');preparation.append(el('summary','Groups and dataset consent'),panel);
+    const logPanel=el('div',null,'ml-run-log');logPanel.append(el('h3','Run log'),status);training.append(logPanel);tools.append(training,imports,preparation);
+    const output=el('div');output.id='ml-results';main.append(output);
+    input.addEventListener('change',async()=>{try{notify('Reading local evaluation…');if(isBusy())throw new Error('Stop capture before importing evaluations.');const file=input.files[0];if(!file||file.size>25_000_000)throw new Error('Choose an evaluation JSON file no larger than 25 MB.');setEvaluation(parseEvaluation(await file.text()));notify('Evaluation imported and consistency checked. Group labels come from the supplied file.');}catch(error){notify(`Import failed: ${error.message}`);}finally{input.value='';}});
     function setEvaluation(report){const mode=report.evaluationMode==='logo_limits'?'loocv':report.evaluationMode==='training_only'?'exploratory':'grouped';evaluations.set(mode,report);evaluation=report;modeField.input.value=mode;updateCommand();renderEvaluation();}
-    function notify(text){status.textContent=text;}
+    function notify(text){status.textContent=text;status.dataset.state=/failed|error/i.test(text)?'error':trainingActive?'working':'ready';}
     function current(){return getTrials().find(t=>t.trialId===selectField.input.value);}
     function loadFields(){const t=current();for(const [k,input]of Object.entries(fields))input.value=t?.ml?.[k]||'';check.checked=t?.ml?.datasetConsent===true;}
     selectField.input.addEventListener('change',loadFields);
-    function refresh(){const previous=selectField.input.value;selectField.input.replaceChildren();const trials=getTrials();for(const t of trials)selectField.input.append(option(t.trialId,`${t.trialId.slice(0,12)} / ${t.condition}${t.ml?.datasetConsent?' / consented':''}`));if(trials.some(t=>t.trialId===previous))selectField.input.value=previous;const eligible=trials.filter(eligibleMetadata).length;count.textContent=`${eligible} of ${trials.length} trials have complete metadata and dataset consent. Training eligibility is checked separately.`;save.disabled=revoke.disabled=!trials.length;exportButton.disabled=!eligible;loadFields();}
-    function renderEvaluation(){output.replaceChildren();headline.replaceChildren();if(!evaluation){headline.append(el('h2','Does fitting these records mean anything?'),el('p','Import an exploratory report or train locally to see the shuffled-label control. No scores are displayed until measured results are loaded.'));output.append(el('p','No model evaluation loaded. No synthetic scores or findings are displayed.','empty-state'));return;}
-      const r=evaluation;const trainingOnly=r.status==='exploratory_fitted';const scope=trainingOnly?'Training':'Held-out';
-      if(r.status==='limits_report'){
-        const limits=r.logoLimits;
-        const format=n=>n===null?'Unavailable':n.toFixed(3);
-        const interval=limits.descriptiveInterval?.map(format).join(' to ')??'Unavailable';
-        headline.append(el('h2','Mean within-group AUC'),el('strong',format(limits.meanWithinGroupAuc),'ml-headline-number'),
-          el('p',`Exploratory 95% group-resampling interval: ${interval}. AUC was measurable in ${limits.mixedGroupsScored} of ${limits.folds.length} held-out groups.`),
-          el('p',`Shuffled-label training control: ${limits.trainingControl.matchOrExceedReal} of 50 fits matched or exceeded the real-label training fit.`));
-        const table=el('table'),header=el('tr'),thead=el('thead'),tbody=el('tbody');
-        for(const name of ['Held-out group','Live','Non-live','AUC and 0.5 reference','Result']){
-          const cell=el('th',name);cell.scope='col';header.append(cell);
-        }
-        thead.append(header);table.append(thead,tbody);
-        const statuses={measured:'Scored',held_out_one_class:'Held-out set has one class',training_one_class:'Training set has one class'};
-        for(const fold of limits.folds){
-          const row=el('tr');
-          for(const value of [fold.group,fold.live,fold.nonLive])row.append(el('td',String(value)));
-          const score=el('td',null,'auc-cell');
-          if(fold.auc!==null){
-            const track=el('span',null,'auc-track'), marker=el('span',null,'auc-marker');
-            track.setAttribute('aria-hidden','true');
-            marker.style.left=`${fold.auc*100}%`;
-            track.append(marker);score.append(track);
-          }
-          score.append(el('strong',format(fold.auc)));
-          row.append(score,el('td',statuses[fold.status]));tbody.append(row);
-        }
-        const wrap=el('div',null,'table-wrap');wrap.append(table);
-        output.append(wrap,el('p',`Pooled AUC: ${format(limits.pooledAuc)}. This compares scores across different fitted models.`));
-      }else if(!trainingOnly){headline.append(el('h2',r.status==='insufficient_data'?'Not enough independent evidence':'Grouped holdout report'),el('p',r.status==='insufficient_data'?'The evaluator has declined to produce model performance. Adding repeated windows does not create new people or recordings.':'The operational split checks passed. This does not remove source/class confounding or establish reliable predictions on new sessions. Inspect limitations and split provenance.'));}
-      if(trainingOnly)output.append(el('div','Training-data exploration. It says nothing about new sessions. These trials were used to fit the models.','notice'));
-      output.append(el('p',`${r.status.replaceAll('_',' ')} · ${r.dataset.eligibleTrials} eligible of ${r.dataset.totalTrials} trials · ${r.dataset.independentGroups} connected provenance groups`),el('p',r.narrative));
-      output.append(el('p',r.dataset.featureFingerprint?`Input fingerprint ${r.dataset.featureFingerprint.slice(0,16)} / canonical trial order / seed ${r.seed}. Compare this fingerprint when checking whether two runs used the same labeled feature inputs.`:'Legacy report without an input fingerprint. Re-run local training to obtain a reproducible snapshot.','field-help'));
-      const audit=r.dataset.independentEvidenceAudit;
-      if(audit){const box=el('section',null,'notice');box.id='ml-independent-evidence';box.append(el('strong',`Independent-evidence check: ${audit.status==='ready'?'operational minimum met':'not ready for grouped performance'}`),el('p',`${audit.mixedGroups} of ${audit.totalGroups} connected groups contain both live and non-live trials; ${audit.singleClassGroups} contain one class only. Strict mode requires at least ${audit.minimumMixedGroups} mixed groups. Related recordings remain connected; changing aliases does not create new evidence.`),el('p','This check controls class/source confounding in this small study. Meeting it does not validate liveness or deployment performance. Exploratory fitting is available separately.'));output.append(box);}
-      output.append(button('Export full evaluation JSON',()=>download(JSON.stringify(r,null,2),'application/json','json')));
-      const limitations=el('ul',null,'explain-list');for(const text of r.limitations)limitations.append(el('li',text));output.append(limitations);
-      const tips=el('section',null,'notice');tips.append(el('strong','Suggested next experiments'));const list=el('ul');for(const text of r.recommendations)list.append(el('li',text));tips.append(list);output.append(tips);
-      const exportSummary=button('Export research summary ↓',()=>download(`# SpoofLab local model evaluation\n\n${r.narrative}\n\n## Next experiments\n${r.recommendations.map(x=>'- '+x).join('\n')}\n\n## Limitations\n${r.limitations.map(x=>'- '+x).join('\n')}\n\nReport scope: ${r.evaluationMode||'grouped_holdout'}. Imported evaluation is unauthenticated. Scores are uncalibrated.\n`,'text/markdown','md'));output.append(exportSummary);
-      if(!r.models.length)return;
-      if(trainingOnly){
-        const c=r.shuffledLabelControl;
-        if(c){
-          const box=el('section');box.id='ml-shuffle-control';box.append(el('h2','Shuffled-label training control'),el('strong',`${c.matchOrExceedReal} / ${c.runs}`,'ml-headline-number'),el('p',`${c.matchOrExceedReal} of ${c.runs} shuffled-label logistic models matched or exceeded the real-label training fit.`),el('p','Training-data exploration, not accuracy on new sessions. The controls fit random labels on the same records. Class counts are fixed; this is not a group-aware significance test.'));
-          const histogram=el('div',null,'confidence-histogram');histogram.id='ml-shuffle-histogram';histogram.setAttribute('aria-label','Counts of training-label matches across 50 shuffled-label fits');
-          const tally=new Map();for(const n of c.shuffledLabelMatches)tally.set(n,(tally.get(n)||0)+1);const peak=Math.max(...tally.values());
-          for(const [matches,runs] of [...tally].sort((a,b)=>a[0]-b[0])){const bin=el('div',null,'hist-bin'),wrap=el('div'),bar=el('i');bar.style.height=(runs/peak*75)+'px';wrap.append(bar);bin.append(wrap,el('span',matches+' matched labels'),el('span',runs+' shuffled fits'));histogram.append(bin);}const controls=el('details');controls.append(el('summary','Inspect shuffled-label fits and training-label counts'),histogram);
-          const list=el('pre',JSON.stringify({realLabelMatches:c.realLabelMatches,trainingTrials:c.trainingTrials,shuffledLabelMatches:c.shuffledLabelMatches,unchangedPermutations:c.unchangedPermutations},null,2));controls.append(list);box.append(controls);headline.append(box);
-        }else headline.append(el('h2','Shuffled-label control missing'),el('p','Re-run exploratory fitting to generate the 50 shuffled-label controls. No control count is assumed.'));
-        output.append(el('p','Logistic regression is shown by default. XGBoost is optional as a small-data fitting/overfitting demonstration, not an accuracy comparison.'));
-      }else{
-        const t=el('table'),h=el('tr');for(const x of ['Model','Held-out trials','False live','Missed live','Brier'])h.append(el('th',x));t.append(h);
-        for(const m of r.models){const row=el('tr');for(const x of [m.name,m.metrics.evaluatedTrials,m.metrics.falseLive,m.metrics.missedLive,m.metrics.brier.toFixed(4)])row.append(el('td',x));t.append(row);}
-        const wrap=el('div',null,'table-wrap');wrap.append(t);output.append(wrap);
+    function refresh(){const previous=selectField.input.value;selectField.input.replaceChildren();const trials=getTrials();for(const t of trials)selectField.input.append(option(t.trialId,`${t.trialId.slice(0,12)} / ${t.condition}${t.ml?.datasetConsent?' / consented':''}`));if(trials.some(t=>t.trialId===previous))selectField.input.value=previous;const eligible=trials.filter(eligibleMetadata).length;count.textContent=`${eligible} of ${trials.length} trials have complete metadata and dataset consent. Training eligibility is checked separately.`;save.disabled=revoke.disabled=!trials.length;exportButton.disabled=!eligible;loadFields();syncControls();}
+    // SVG coordinates scale with panel width; keep the printed tick text at 12 physical pixels.
+    const plotSize=new ResizeObserver(entries=>{
+      for(const {target,contentRect} of entries){
+        if(contentRect.width>0)target.style.fontSize=(12*target.viewBox.baseVal.width/contentRect.width)+'px';
       }
-      const modelField=field('MODEL','ml-model','select'),filterField=field('SHOW','ml-prediction-filter','select');r.models.forEach((m,i)=>modelField.input.append(option(String(i),m.name+(trainingOnly&&m.name==='XGBoost'?' / overfitting demonstration':''))));for(const [v,t]of [['all','All '+scope.toLowerCase()+' predictions'],['errors','Incorrect predictions'],['borderline','Scores 0.4–0.6 (heuristic only)']])filterField.input.append(option(v,t));const filters=el('div',null,'ml-fields');filters.append(modelField.wrap,filterField.wrap);if(trainingOnly){modelField.wrap.hidden=true;const showTree=el('input');showTree.type='checkbox';showTree.id='ml-show-xgboost';const treeLabel=el('label',null,'check-row');treeLabel.append(showTree,el('span','Show optional XGBoost fitting/overfitting demonstration'));filters.append(treeLabel);showTree.addEventListener('change',()=>{modelField.wrap.hidden=!showTree.checked;if(!showTree.checked){modelField.input.value=String(r.models.findIndex(m=>m.name==='Logistic regression'));renderPredictions();}});};output.append(filters);const predictions=el('div'),inspector=el('section',null,'ml-inspector');inspector.id='ml-inspector';output.append(predictions,inspector);
-      function inspect(p){inspector.replaceChildren(el('h3',`${p.trialId}: ${p.correct?'correct':'incorrect'} experimental classification`),el('p',`Actual: ${p.condition} · estimated live-like probability ${(p.probability*100).toFixed(1)}% (uncalibrated). ${scope} record; fold ${p.fold}.`),el('p','Contributions explain this model’s log-odds calculation, not a causal explanation of physiology or proof of live presence. Positive contributions push toward the live label.'),el('p',`Base log-odds: ${p.baseValue.toFixed(4)}. Base plus contributions reconstructs this prediction.`));const t=el('table'),h=el('tr');for(const x of ['Feature','Value','Log-odds contribution'])h.append(el('th',x));t.append(h);for(const c of [...p.contributions].sort((a,b)=>Math.abs(b.contribution)-Math.abs(a.contribution))){const row=el('tr');row.append(el('td',c.feature),el('td',c.value===null?'Missing / train-fitted imputation':c.value.toFixed(4)),el('td',`${c.contribution>=0?'+':''}${c.contribution.toFixed(4)}`,c.contribution>=0?'ml-positive':'ml-negative'));t.append(row);}const sourceTrial=getTrials().find(t=>t.trialId===p.trialId);
-        if(sourceTrial&&window.SpoofPolicies){const measurements=window.SpoofPolicies.fromTrialMeasurements(sourceTrial),checks=window.SpoofPolicies.POLICIES.map(policy=>({id:policy.id,...window.SpoofPolicies.evaluate(policy.id,measurements)}));const comparison=el('section',null,'ml-policy-comparison');comparison.id='ml-policy-comparison';comparison.append(el('strong','Fixed policies versus model output'),el('p',`Model label: ${p.predictedLabel?'live':'non-live'} (experimental). A policy pass/fail is a different measurement rule, not an authentication label.`));for(const check of checks){const disagrees=(check.decision==='pass'&&p.predictedLabel===0)||(check.decision==='fail'&&p.predictedLabel===1);comparison.append(el('p',`${check.id}: ${check.decision}${disagrees?' / conflicts with model direction':check.decision==='abstain'?' / cannot compare direction':''}. ${check.reasons.join(' ')}`));}comparison.append(el('p',window.SpoofPolicies.LIMITATION));inspector.append(comparison);}
-        else inspector.append(el('p','Import the matching saved trial to compare these model predictions with the fixed measurement policies.'));
-        const figure=el('figure',null,'effect-plot');
-        figure.append(el('figcaption','Feature contributions to this prediction'));
-        const ordered=[...p.contributions].sort((a,b)=>Math.abs(b.contribution)-Math.abs(a.contribution));
-        const largest=Math.max(0,...ordered.map(item=>Math.abs(item.contribution)));
-        for(const item of ordered){
-          const row=el('div',null,'effect-row');
-          const track=el('span',null,'effect-track');
-          const bar=el('i',null,item.contribution<0?'below':'above');
-          bar.style.width=(largest ? 50*Math.abs(item.contribution)/largest : 0)+'%';
-          track.append(bar);
-          row.append(el('span',item.feature.replaceAll('_',' ')),track,el('code',(item.contribution>0?'+':'')+item.contribution.toFixed(3)));
-          figure.append(row);
+    });
+    const plotted=new Set();
+    function figureFrame(spec){
+      const figure=C.frame(spec);
+      for(const previous of plotted)if(!previous.isConnected){plotSize.unobserve(previous);plotted.delete(previous);}
+      plotSize.observe(figure);plotted.add(figure);return figure;
+    }
+    function card(title, index) {
+      const box=el('section',null,'ml-card'), heading=el('h2');
+      heading.append(el('span',index+' /','ml-index'),document.createTextNode(title));
+      box.append(heading);
+      return box;
+    }
+    function help(parent,message) { parent.append(C.state(message,'unavailable')); }
+    function sameDatasetReport(mode) {
+      const candidate=evaluations.get(mode);
+      if(candidate===evaluation)return candidate;
+      const fingerprint=evaluation?.dataset.featureFingerprint;
+      return fingerprint&&candidate?.dataset.featureFingerprint===fingerprint?candidate:null;
+    }
+    function renderAudit() {
+      const cardEl=card('Independent groups','01');cardEl.id='ml-independent-evidence';
+      const a=evaluation?.dataset.independentEvidenceAudit;
+      if(!a){help(cardEl,'Import a report with its grouped evaluation audit.');return cardEl;}
+      const total=el('p',null,'ml-metric');total.append(el('strong',String(a.mixedGroups)),el('span',' / '+a.minimumMixedGroups+' required'));
+      const bar=el('progress');bar.max=a.minimumMixedGroups;bar.value=Math.min(a.mixedGroups,a.minimumMixedGroups);bar.setAttribute('aria-label','Groups containing both classes');
+      const state=el('p',null,'ml-audit-status');state.append(C.icon(a.status==='ready'?'pass':'abstain'),el('span',a.status==='ready'?'Minimum met':'Insufficient data'));
+      cardEl.append(state,total,bar,el('p',a.mixedGroups+' of '+a.totalGroups+' connected groups contain both live and non-live trials.','field-help'));return cardEl;
+    }
+    function renderAuc() {
+      const box=card('Held-out group AUC','02'), l=sameDatasetReport('loocv')?.logoLimits;
+      if(!l){help(box,'Load a Group limits report for this dataset to compare held-out groups.');return box;}
+      const element=figureFrame({title:'AUC by held-out group',summary:l.folds.map(f=>'Group '+f.group+': '+(f.auc===null?'unavailable':f.auc)+', n='+ (f.live+f.nonLive)).join('. '),width:460,height:45+l.folds.length*33});
+      const left=85,right=350,base=36;
+      for(const tick of [0,0.5,1]){
+        const x=left+(right-left)*tick;
+        element.append(C.svg('line',{x1:x,x2:x,y1:23,y2:base+l.folds.length*33-20,class:tick===.5?'ml-reference':'ml-grid'}),C.svg('text',{x:x,y:16,'text-anchor':'middle'},String(tick)));
+      }
+      const hatch=C.hatch(element);
+      for(const [i,f] of l.folds.entries()){
+        const y=base+i*33;
+        element.append(C.svg('text',{x:0,y:y+4},'Group '+f.group));
+        const desc='Group '+f.group+' · '+f.live+' live, '+f.nonLive+' non-live · '+(f.auc===null?'unavailable ('+f.status.replaceAll('_',' ')+')':'AUC '+f.auc);
+        if(f.auc===null) C.mark(element,'rect',{x:left,y:y-5,width:right-left,height:10,fill:hatch},desc);
+        else C.mark(element,'circle',{cx:left+(right-left)*f.auc,cy:y,r:5,class:'ml-dot'},desc);
+        element.append(C.svg('text',{x:458,y:y+4,'text-anchor':'end'},f.auc===null?'Unavailable':f.auc.toFixed(3)));
+      }
+      box.append(element,el('p','Scorable groups '+l.mixedGroupsScored+' / '+l.folds.length+'. Descriptive interval '+(l.descriptiveInterval?l.descriptiveInterval.map(n=>n.toFixed(3)).join(' to '):'unavailable')+'.','field-help'));
+      return box;
+    }
+    function renderShuffle() {
+      const box=card('Shuffled-label training control','03');box.id='ml-shuffle-control';
+      const c=sameDatasetReport('exploratory')?.shuffledLabelControl;
+      if(!c){help(box,'Load an exploratory report to inspect the individual shuffled fits.');return box;}
+      const summary=c.matchOrExceedReal+' of '+c.runs+' shuffled fits matched or exceeded the real fit.';
+      const line=el('p',null,'ml-shuffle-summary');line.append(el('strong',c.matchOrExceedReal+' / '+c.runs),document.createTextNode(' matched or exceeded the real fit'));
+      const graph=figureFrame({title:'Training-label matches per shuffled fit',summary,width:600,height:154});
+      const counts=new Map(),n=c.trainingTrials;
+      for(const value of c.shuffledLabelMatches)counts.set(value,(counts.get(value)||0)+1);
+      const maxCount=Math.max(...counts.values());
+      const x=v=>18+(564*v/Math.max(1,n)),scale=86/maxCount;
+      graph.append(C.svg('line',{x1:18,y1:110,x2:582,y2:110,class:'ml-grid'}));
+      const target=x(c.realLabelMatches);
+      graph.append(C.svg('line',{x1:target,x2:target,y1:15,y2:116,class:'ml-reference'}),C.svg('text',{x:target,y:12,'text-anchor':target>495?'end':'start'},'Real fit '+c.realLabelMatches+'/'+n));
+      const stacked=new Map();
+      c.shuffledLabelMatches.forEach((v,i)=>{
+        const k=stacked.get(v)||0;stacked.set(v,k+1);
+        C.mark(graph,'circle',{cx:x(v),cy:104-k*scale,r:Math.min(4,scale*.42),class:v>=c.realLabelMatches?'ml-dot':'ml-muted-dot'},'Shuffle '+(i+1)+': '+v+' matched labels, n='+n);
+      });
+      graph.append(C.svg('text',{x:18,y:136},'0'),C.svg('text',{x:582,y:136,'text-anchor':'end'},n+' labels'));
+      box.append(line,graph,el('p','Training fit, not a significance test. Each dot is one shuffled fit.','field-help'));return box;
+    }
+    function renderPrediction(panel,model,scope,optional=false){
+      const suffix=optional?'-tree':'';
+      const inspect=el('section');inspect.id='ml-inspector'+suffix;
+      const filter=field('Trial filter','ml-prediction-filter'+suffix,'select'),choice=field('Prediction','ml-prediction-pick'+suffix,'select');
+      for(const [value,label] of [['all','All trials'],['errors','Incorrect labels'],['borderline','Scores 0.4–0.6']]) filter.input.append(option(value,label));
+      const fields=el('div',null,'ml-fields');fields.append(filter.wrap,choice.wrap);panel.append(fields,inspect);
+      const all=el('details',null,'ml-all-scores');
+      all.append(el('summary','Inspect prediction table'));panel.append(all);
+      function fill(){
+        const records=model.predictions.filter(p=>filter.input.value==='errors'?!p.correct:filter.input.value==='borderline'?p.probability>=.4&&p.probability<=.6:true);
+        choice.input.replaceChildren(...records.map(p=>option(p.trialId,p.trialId.slice(0,12)+' / '+p.condition)));
+        choice.input.disabled=!records.length;
+        all.querySelector('.ml-score-wrap')?.remove();
+        const wrap=el('div',null,'ml-score-wrap'),table=el('table'),header=el('tr');
+        for(const label of ['Trial','Condition','Score','Label','Inspect'])header.append(el('th',label));
+        table.append(header);
+        for(const row of records){
+          const tr=el('tr'),action=el('td');action.append(button('Explain',()=>{choice.input.value=row.trialId;draw();inspect.scrollIntoView({block:'nearest'});}));
+          tr.append(el('td',row.trialId.slice(0,12)),el('td',row.condition),el('td',row.probability.toFixed(4)),el('td',row.predictedLabel?'Live':'Non-live'),action);table.append(tr);
         }
-        const details=el('details',null,'coefficient-table');
-        const wrap=el('div',null,'table-wrap');
-        wrap.append(t);details.append(el('summary','Inspect exact feature values and contributions'),wrap);
-        inspector.append(figure,details);}
-      function renderPredictions(){predictions.replaceChildren();inspector.replaceChildren();const model=r.models[Number(modelField.input.value)],chosen=model.predictions.filter(p=>filterField.input.value==='errors'?!p.correct:filterField.input.value==='borderline'?p.probability>=.4&&p.probability<=.6:true);if(!chosen.length){predictions.append(el('p','No predictions match this filter.'));return;}const t=el('table'),h=el('tr');for(const x of ['Trial','Actual','Live-like score','Prediction','Inspect'])h.append(el('th',x));t.append(h);for(const p of chosen){const row=el('tr');row.append(el('td',p.trialId.slice(0,16)),el('td',p.condition),el('td',`${(p.probability*100).toFixed(1)}%`),el('td',`${p.predictedLabel?'live':'non-live'} · ${p.correct?'correct':'incorrect'}`));const cell=el('td');cell.append(button('Explain',()=>inspect(p)));row.append(cell);t.append(row);}const wrap=el('div',null,'table-wrap');wrap.append(t);predictions.append(wrap);inspect(chosen[0]);}
-      const logisticIndex=r.models.findIndex(m=>m.name==='Logistic regression');if(trainingOnly&&logisticIndex>=0)modelField.input.value=String(logisticIndex);modelField.input.addEventListener('change',renderPredictions);filterField.input.addEventListener('change',renderPredictions);renderPredictions();
-      const splitDetails=el('details');splitDetails.append(el('summary','Inspect group split provenance and exclusions'),el('pre',JSON.stringify({splits:r.splits,excluded:r.dataset.excluded},null,2)));output.append(splitDetails);
+        wrap.append(table);all.append(wrap);draw();
+      }
+      function draw(){
+        inspect.replaceChildren();
+        const p=model.predictions.find(p=>p.trialId===choice.input.value);
+        if(!p){help(inspect,'Choose another filter to inspect a prediction.');return;}
+        const items=[...p.contributions].sort((a,b)=>Math.abs(b.contribution)-Math.abs(a.contribution));
+        const center=330, half=116, max=Math.max(0,...items.map(a=>Math.abs(a.contribution)));
+        const figure=figureFrame({title:model.name+' contributions',summary:items.map(i=>i.feature+': '+i.contribution.toFixed(4)).join('. '),width:555,height:46+items.length*28});
+        figure.append(C.svg('line',{x1:center,x2:center,y1:22,y2:items.length*28+29,class:'ml-reference'}),C.svg('text',{x:center,y:13,'text-anchor':'middle'},'0'));
+        const t=el('table'),header=el('tr');for(const label of ['Feature','Measurement','Contribution'])header.append(el('th',label));t.append(header);
+        for(const [i,it] of items.entries()){
+          const y=35+i*28,width=max?half*Math.abs(it.contribution)/max:0;
+          figure.append(C.svg('text',{x:3,y:y+4},it.feature.replaceAll('_',' ')),C.svg('text',{x:545,y:y+4,'text-anchor':'end'},(it.contribution>0?'+':'')+it.contribution.toFixed(3)));
+          C.mark(figure,'rect',{x:it.contribution<0?center-width:center,y:y-5,width,height:10,class:it.contribution<0?'ml-muted-dot':'ml-dot'},it.feature+': '+it.contribution+' log-odds; n=1 trial');
+          const row=el('tr');row.append(el('td',it.feature),el('td',it.value===null?'Missing / imputed':String(it.value)),el('td',String(it.contribution)));t.append(row);
+        }
+        const details=el('details');details.append(el('summary','Exact contributions'),t);
+        inspect.append(el('p',scope+' record · '+p.condition+' · model label '+(p.predictedLabel?'live':'non-live')+' · uncalibrated score '+p.probability.toFixed(3)),figure,el('p','Positive contributions increase the fitted live-label score. Values are changes in log-odds for this one record.','field-help'),details);
+        const trial=getTrials().find(t=>t.trialId===p.trialId);
+        if(trial&&window.SpoofPolicies){
+          const d=el('details');d.id='ml-policy-comparison'+suffix;d.append(el('summary','Compare frozen policies'));
+          for(const rule of window.SpoofPolicies.POLICIES){
+            const outcome=window.SpoofPolicies.evaluate(rule.id,window.SpoofPolicies.fromTrialMeasurements(trial));const verb={pass:'Rule passed',fail:'Rule failed',abstain:'Rule could not score'};
+            d.append(el('p',rule.name+' · '+verb[outcome.decision]+'. '+outcome.reasons.join(' ')));
+          }
+          inspect.append(d);
+        }
+      }
+      choice.input.addEventListener('change',draw);filter.input.addEventListener('change',fill);fill();
+    }
+    function renderEvaluation(){
+      syncControls();headline.replaceChildren(renderAudit(),renderAuc(),renderShuffle());output.replaceChildren();clear.disabled=!evaluation;
+      if(!evaluation){output.append(C.state('Import a local evaluation or train a model to inspect feature contributions.','empty'));return;}
+      const r=evaluation,trainingOnly=r.status==='exploratory_fitted';
+      output.append(el('p',(trainingOnly?'Training-data exploration · ':'')+r.status.replaceAll('_',' ')+' · '+r.dataset.eligibleTrials+' eligible of '+r.dataset.totalTrials+' trials.','ml-report-meta'));
+      const logistic=r.models.find(m=>m.name==='Logistic regression')||r.models.find(m=>m.name!=='XGBoost');
+      if(logistic){const p=card(logistic.name+' contributions','04');output.append(p);renderPrediction(p,logistic,trainingOnly?'Training':'Held-out');}
+      const tree=r.models.find(m=>m.name==='XGBoost');
+      if(tree){
+        const d=el('details',null,'ml-tree'), title=el('summary','XGBoost · optional inspection');d.append(title);
+        const constant=tree.predictions.every(row=>row.probability===tree.predictions[0].probability);
+        if(constant){title.append(el('span','Constant score','ml-tree-state'));d.append(el('p','Every fitted score equals '+tree.predictions[0].probability+'. This model gives all these records the same ranking.'));}
+        d.append(el('p',tree.metrics.evaluatedTrials+' scored records. '+tree.metrics.falseLive+' false-live labels; '+tree.metrics.missedLive+' missed live labels.'));
+        const exact=el('details');exact.append(el('summary','Exact model metrics'),el('pre',JSON.stringify(tree.metrics,null,2)));d.append(exact);output.append(d);
+        d.addEventListener('toggle',()=>{if(d.open&&!d.querySelector('#ml-inspector-tree'))renderPrediction(d,tree,trainingOnly?'Training':'Held-out',true);});
+      }
+      const raw=el('details',null,'ml-raw');raw.append(el('summary','Inspect evaluation JSON'));raw.addEventListener('toggle',()=>{if(raw.open&&!raw.querySelector('pre'))raw.append(el('pre',JSON.stringify(r,null,2)));});output.append(raw);
+      const notes=el('details',null,'ml-notes');notes.append(el('summary','Research notes and limitations'),el('p',r.narrative));
+      const list=el('ul');for(const text of [...r.limitations,...r.recommendations])list.append(el('li',text));notes.append(list);output.append(notes);
+      if(r.dataset.featureFingerprint)notes.append(el('p','Input fingerprint '+r.dataset.featureFingerprint.slice(0,16)+' · seed '+r.seed,'field-help'));
+      const exports=el('div',null,'action-row');exports.append(button('Export evaluation JSON',()=>download(JSON.stringify(r,null,2),'application/json','json')),button('Export research summary',()=>download('# SpoofLab local model evaluation\n\n'+r.narrative+'\n\n## Next experiments\n'+r.recommendations.map(x=>'- '+x).join('\n')+'\n\n## Limitations\n'+r.limitations.map(x=>'- '+x).join('\n')+'\n\nReport scope: '+(r.evaluationMode||'grouped_holdout')+'. Scores are uncalibrated.\n','text/markdown','md')));output.append(exports);
     }
     refresh();renderEvaluation();mounted={refresh,clearEvaluation(){evaluations.clear();evaluation=null;renderEvaluation();}};return mounted;
   }

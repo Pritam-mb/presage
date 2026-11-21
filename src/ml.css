@@ -1,1 +1,63 @@
-#view-ml h2{font-size:17px;font-weight:450;margin:0 0 15px}#view-ml h3{font-size:15px;font-weight:500;margin-top:25px}.ml-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:15px 0}#view-ml .action-row{flex-wrap:wrap}#view-ml select{max-width:100%}#view-ml input[type=file]{display:block;margin-bottom:18px}.ml-inspector{border-top:1px solid var(--border);margin-top:20px}.ml-positive{color:#c2df99}.ml-negative{color:#e0b989}#ml-results>p{overflow-wrap:anywhere}#ml-results table{margin-top:15px}#view-ml details{margin-top:25px}#view-ml .notice li{margin:8px 0}#ml-status{white-space:pre-wrap}@media(max-width:800px){.ml-fields{grid-template-columns:1fr}#view-ml .page-intro h1{font-size:34px}}@media(max-width:650px){nav{flex-wrap:wrap}.nav-button{width:calc(50% - 3px)}}
+#view-ml { color:var(--text); }
+#view-ml .page-intro { margin-bottom:16px; }
+#view-ml .page-intro h1 { margin-bottom:4px; }
+#view-ml .ml-scope { display:flex; align-items:center; gap:12px; margin:0 0 24px; padding:12px 16px; border:1px solid var(--line-strong); border-radius:4px; background:var(--surface); font-size:16px; font-weight:600; }
+.ml-layout { display:grid; grid-template-columns:minmax(0,8fr) minmax(270px,4fr); gap:24px; align-items:start; }
+.ml-main,.ml-tools { display:grid; align-content:start; gap:16px; min-width:0; }
+#view-ml #ml-headline { display:grid; grid-template-columns:1fr; gap:16px; padding:0; margin:0; border:0; background:transparent; }
+#view-ml .ml-card,#view-ml .ml-tools>.panel,#view-ml .ml-tree,#view-ml .ml-raw,#view-ml .ml-notes { min-width:0; color:var(--text); border:1px solid var(--line-strong); background:var(--surface); border-radius:6px; padding:20px; box-shadow:none; }
+#view-ml :is(.ml-card,.ml-tools) h2 { display:flex;align-items:baseline;gap:10px;margin:0 0 16px;font-size:20px;font-weight:600;letter-spacing:-.025em; }
+#view-ml .ml-index { font:500 12px/1.4 var(--mono,monospace);letter-spacing:.08em;color:var(--muted); }
+#view-ml p { font-size:14px; line-height:1.5; overflow-wrap:anywhere; }
+#view-ml :is(.ml-audit-status,.ml-report-meta,.ml-log,.ml-tree-state) { font:500 12px/1.5 var(--mono,monospace); letter-spacing:.02em; }
+#view-ml .ml-audit-status { color:var(--muted);margin-bottom:4px; }
+#view-ml .ml-metric { font-family:var(--mono,monospace);margin:4px 0 8px;color:var(--muted); }
+#view-ml .ml-metric strong { font-size:44px;line-height:1.05;color:var(--text);font-weight:600; }
+#view-ml progress { appearance:none;width:100%;height:8px;border:0;background:var(--line-strong); }
+#view-ml progress::-webkit-progress-bar {background:var(--line-strong);}
+#view-ml progress::-webkit-progress-value {background:var(--signal);}
+#view-ml .ml-fields { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(154px,100%),1fr));gap:12px;margin:12px 0; }
+#view-ml input,#view-ml select { width:100%;max-width:100%; }
+#view-ml input[type=checkbox] { width:18px; }
+#view-ml input[type=file] { min-width:0;font-size:14px; }
+#view-ml #ml-results { display:grid; min-width:0; align-content:start; gap:16px; }
+#view-ml .ml-tools { min-width:0; }
+#view-ml .ml-segments { display:flex; gap:0; padding:3px;border:1px solid var(--line-strong);border-radius:4px;background:var(--bg); }
+#view-ml .ml-segments button { flex:1 1 auto; min-width:0; min-height:36px;padding:6px 4px;font-weight:600;font-size:14px;line-height:1.2; text-transform:none; letter-spacing:0; color:var(--muted);border:0;border-radius:3px;background:transparent; }
+#view-ml .ml-segments button[aria-pressed=true]{ color:var(--signal); background:var(--raised); border-bottom:2px solid var(--signal);}
+#view-ml #ml-train { width:100%; margin:12px 0 4px; }
+#view-ml #ml-train[aria-busy=true]::before {content:"… "; }
+#view-ml .ml-run-log { border-top:1px solid var(--line); margin-top:16px; padding-top:12px;}
+#view-ml .ml-run-log h3 { font:500 12px/1.4 var(--mono,monospace); text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:0; }
+#view-ml #ml-status { margin:4px 0 0;padding:0;border:0;background:transparent; color:var(--text); }
+#view-ml #ml-status[data-state="error"]::before { content:"! ";color:var(--amber); }
+#view-ml #ml-status[data-state="working"]::before { content:"… "; }
+#view-ml .ml-imports { display:grid;gap:8px; }
+#view-ml .ml-imports h2 {margin:0;}
+#view-ml .ml-preparation>.panel { border:0; padding:0; background:transparent; margin:12px 0 0; }
+#view-ml details summary { font-size:14px;font-weight:600;cursor:pointer;}
+#view-ml details pre { max-height:330px; white-space:pre-wrap;overflow:auto;overflow-wrap:anywhere; }
+#view-ml .ml-fields select { min-width:0; }
+#view-ml .action-row { display:flex;flex-wrap:wrap;gap:8px; }
+#view-ml .ml-tree-state { display:inline-block;color:var(--muted); margin-left:8px; }
+#view-ml .ml-grid { stroke:var(--text);stroke-opacity:.12; }
+#view-ml .ml-reference { stroke:var(--muted);stroke-dasharray:3 4; }
+#view-ml .ml-dot { fill:var(--signal); }
+#view-ml .ml-muted-dot { fill:var(--neutral); }
+#view-ml svg.lab-chart { width:100%;height:auto;display:block;overflow:visible; }
+#view-ml svg text { fill:var(--muted);font-family:var(--mono,monospace);font-size:inherit; }
+#view-ml .ml-scope>svg { color:var(--signal);flex:none; }
+#view-ml .ml-audit-status {display:flex;align-items:center;gap:8px;}
+#view-ml .ml-shuffle-summary strong { display:inline-block;font:600 28px/1 var(--mono,monospace);margin:0 6px 0 0;color:var(--text); }
+#view-ml .ml-report-meta { color:var(--muted); margin:0; }
+#view-ml #ml-inspector table { width:100%;font-size:14px;word-break:break-word; }
+#view-ml .ml-tools .field-help { font-size:14px; }
+@media(min-width:1600px){#view-ml #ml-headline {grid-template-columns:minmax(220px,3fr) minmax(320px,5fr);}#ml-headline #ml-shuffle-control {grid-column:1/-1;}}
+@media(max-width:1050px){.ml-layout {grid-template-columns:1fr;}.ml-tools {grid-template-columns:repeat(auto-fit,minmax(min(245px,100%),1fr));}}
+@media(min-width:1240px){
+  #view-ml #ml-headline { grid-template-columns:minmax(172px,3fr) minmax(258px,5fr); }
+  #view-ml #ml-shuffle-control { grid-column:1/-1; }
+}
+#view-ml .ml-score-wrap { max-height:360px;overflow:auto; }
+#view-ml .ml-score-wrap th { position:sticky;top:0;background:var(--raised); }
+#view-ml .ml-fields>div {min-width:0;}

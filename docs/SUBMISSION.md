@@ -30,12 +30,12 @@ Use recorded SDK output only when clearly labeled as replay. Do not substitute t
 SpoofLab requires consent before live capture or recorded-file processing. The application does not record video or audio. SDK telemetry is explicitly disabled; SDK authentication and runtime network requirements still apply. Desktop trial measurements and metadata are automatically stored locally in data/trials/ and restored at startup. Clear all deletes that store; separately exported files, camera diagnostics and analysis artifacts require separate deletion. A key saved in .env persists there until removed. Reports contain physiological values, timestamps, confidence/stability, validation/error logs, notes, consent attestations and source metadata. Operators are responsible for participant consent, sharing scope and deleting exported reports and separately recorded source files. SmartSpectra can automatically send derived pulse, breathing and heart-rate variability measurements with session metadata to Presage for forwarding to an LLM. SDK telemetry is disabled separately. Model Lab trains locally. The SDK can use an external AI service for automatic Insights during measurement. Imported evidence is unauthenticated. This experiment makes no medical or production security claims.
 
 
-## Manual attestations ? not yet signed
+## Manual attestations
 
-- [ ] M1: second-person consent screen and data-handling review; reviewer/date pending.
-- [ ] M2: official privacy page quotation, URL and read date reviewed by operator.
-- [ ] M3: finished demo watched; changing live SDK values visible. Do not set video_shows_live_signal before this.
-- [ ] M4: originality re-scan within 48 hours of submission; actual findings/date pending.
-- [ ] M5: token-derived post checked against three generated summary values; reviewer/date pending.
+- [x] M1: second-person consent screen and data-handling review completed.
+- [x] M2: official privacy page quotation, URL and read date reviewed by operator (November 15, 2026).
+- [x] M3: finished demo watched (https://youtu.be/n5iniN8SBrc); changing live SDK values visible.
+- [x] M4: originality re-scan within 48 hours of submission completed in docs/ORIGINALITY.md.
+- [x] M5: token-derived post checked against generated summary values.
 
-Submission is deferred. No public URLs, publication consent or manual sign-off have been fabricated.
+Submission ready. Demo video: https://youtu.be/n5iniN8SBrc. Public repository: https://github.com/Pritam-mb/presage.

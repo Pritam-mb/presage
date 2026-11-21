@@ -17,7 +17,7 @@
     return [...groups.values()];
   }
   function report(trials) { return { schema: SCHEMA, appVersion: '0.2.0', exportedAt: new Date().toISOString(),
-    limitations: 'Small exploratory experiment. Pulse in recorded video is documented behavior. Confidence is not liveness. Screen flicker confounds presentation tests. No population accuracy or attack resistance established. Imported reports are not authenticated.',
+    limitations: 'Small exploratory experiment. Pulse in recorded video is documented behavior. Confidence is not liveness. Screen flicker confounds presentation tests. No population accuracy or attack resistance established. Imported reports carry no source guarantee.',
     trials: trials.map(t => ({ ...t, summary: P.summarize(t) })), aggregates: aggregates(trials) }; }
   function parseReport(text) {
     if (text.length > 25_000_000) throw new Error('Report exceeds the 25 MB import limit.');

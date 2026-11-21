@@ -9,7 +9,8 @@ const page = pathToFileURL(path.join(__dirname, 'index.html')).href;
 const envFile = path.join(__dirname, '..', '.env');
 if (fs.existsSync(envFile)) process.loadEnvFile(envFile);
 app.whenReady().then(() => {
-  const win = new BrowserWindow({ width: 1380, height: 930, backgroundColor: '#101715',
+  const win = new BrowserWindow({ width: 1380, height: 930, backgroundColor: '#0A0D0B',
+    titleBarStyle: 'hidden', titleBarOverlay: {color:'#0A0D0B',symbolColor:'#C9D3CC',height:40}, autoHideMenuBar:true,
     webPreferences: { preload: path.join(__dirname,'..','dist','preload.cjs'),
       contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: false } });
   bindSmartSpectraIpc(win);

@@ -1,0 +1,76 @@
+﻿.lab-chart {display:block; width:100%; max-width:100%; overflow:visible; color:var(--neutral)}
+.lab-chart .chart-grid {stroke:currentColor;stroke-opacity:.12;stroke-width:1;vector-effect:non-scaling-stroke}
+.lab-chart .chart-tick,.lab-chart .chart-row-label {font:12px 'JetBrains Mono',monospace; fill:var(--muted)}
+.lab-chart .chart-row-label {fill:var(--text);font-weight:600}
+.chart-hatch {stroke:var(--line-strong);stroke-width:1;fill:none}
+.chart-whisker {stroke:var(--muted);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.strip-mark,.tradeoff-mark {fill:var(--signal);stroke:var(--bg);stroke-width:1}
+.strip-mark {cursor:pointer}
+.strip-mark:is(:hover,:focus),.tradeoff-mark:is(:hover,:focus){stroke:var(--text);stroke-width:3}
+.chart-state {display:flex;align-items:center;gap:12px;padding:16px;color:var(--muted);font-size:14px}
+.chart-state > svg,.evidence-outcome > svg,.arena-result-label > svg {flex:none}
+.chart-state-error > svg,.chart-state-unavailable > svg {color:var(--amber)}
+.arena-workspace {display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px}
+#view-arena .page-intro {display:block}
+#view-arena .arena-config,#view-arena .arena-verdict {margin:0;min-width:0;padding:24px}
+#view-arena .arena-config>label {display:block;margin-top:20px}
+#view-arena .arena-fresh {padding:12px 0 0;margin:16px 0 0;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent}
+#view-arena .arena-fresh[open] summary {margin-bottom:12px}
+#view-arena .arena-fresh button {margin:8px 8px 0 0}
+#view-arena .arena-tabs,.ledger-filters {display:flex;gap:4px;flex-wrap:wrap;margin:12px 0}
+.arena-tabs button,.ledger-filters button {min-height:36px;font-size:14px;padding:6px 10px}
+.arena-tabs button[aria-pressed=true],.ledger-filters button[aria-pressed=true]{border-color:var(--signal);color:var(--signal)}
+#view-arena .threshold-chips {display:flex;flex-wrap:wrap;gap:6px}
+.threshold-chips span {font:12px 'JetBrains Mono',monospace;border:1px solid var(--line-strong);color:var(--muted);padding:4px 7px;border-radius:4px}
+#view-arena #arena-evaluate {margin-top:12px}
+.arena-verdict {border-left:3px solid var(--neutral)}
+.arena-verdict.is-revealed {animation:lab-reveal 350ms ease-out}
+@keyframes lab-reveal {from{transform:perspective(1200px) rotateY(-9deg);opacity:.55}to{transform:perspective(1200px) rotateY(0);opacity:1}}
+.arena-result-label,.reveal-note,.evidence-outcome {display:inline-flex;gap:8px;align-items:center}
+.arena-result-label {font-size:clamp(20px,2vw,28px);color:var(--neutral)}
+.arena-verdict .verdict-code {font:12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--muted);margin:8px 0}
+.arena-verdict .reveal-note {display:grid;grid-template-columns:20px minmax(0,1fr);padding:12px 0;margin-top:12px;border-top:1px solid var(--line)}
+.reveal-note span {grid-column:2}
+.arena-verdict[data-reveal=right] .reveal-note svg{color:var(--signal)}
+.arena-verdict[data-reveal=wrong] .reveal-note svg{color:var(--red)}
+.arena-verdict[data-reveal=abstain] .reveal-note svg{color:var(--amber)}
+.arena-metrics {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;font:12px 'JetBrains Mono',monospace;overflow-wrap:anywhere}
+.arena-metrics dd {margin:0}
+#arena-scoreboard,.arena-tradeoff {margin-top:24px}
+.arena-matrix td,.arena-matrix th {min-width:112px;vertical-align:top;font-size:14px}
+.arena-matrix td small,.arena-matrix td strong {display:block}
+.arena-matrix .lab-chart {height:8px;margin-bottom:6px}
+.arena-matrix td small,.unavailable-cell {color:var(--muted)}
+.unavailable-cell {display:inline-flex;align-items:center;gap:6px}
+.unavailable-cell:before {content:'∕ ∕';font-family:monospace}
+.tradeoff-layout {display:grid;grid-template-columns:minmax(0,2fr) minmax(160px,1fr);gap:16px;align-items:center}
+.tradeoff-values dt {font-weight:600}
+.tradeoff-values dd {margin:4px 0 12px;color:var(--muted);font:12px 'JetBrains Mono',monospace}
+.lab-drawer {position:fixed;inset:0 0 0 auto;height:100dvh;width:min(600px,94vw);max-height:none;margin:0;padding:24px;border:0;border-left:1px solid var(--line-strong);border-radius:0;background:var(--surface);color:var(--text);overflow:auto}
+.lab-drawer::backdrop {background:rgb(0 0 0 / 58%)}
+.trial-inspector #detail-panel {margin:0;padding:0;border:0}
+.trial-inspector .panel-heading {flex-wrap:wrap}
+.trial-inspector .detail-grid {display:grid;grid-template-columns:1fr}
+.lab-drawer pre {white-space:pre-wrap;overflow-wrap:anywhere;font:14px 'JetBrains Mono',monospace}
+#view-evidence .evidence-stats {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line-strong);border-radius:6px;overflow:hidden;margin:0 0 16px}
+#view-evidence .evidence-stats .stat-card {padding:16px 20px;background:var(--surface);border:0;border-radius:0}
+#view-evidence .stat-card strong {font-size:clamp(40px,3.2vw,52px);color:var(--text)}
+#view-evidence .evidence-stats .stat-card:nth-child(n+4) strong{font-size:20px}
+#view-evidence .early-panel {margin-bottom:16px}
+#early-endings {display:flex;gap:24px;flex-wrap:wrap}
+.ending-entry {display:grid;grid-template-columns:auto auto;column-gap:10px;align-items:center;text-transform:capitalize;font-size:14px}
+.ending-entry>strong {font:12px 'JetBrains Mono',monospace}
+.ending-entry .lab-chart {grid-column:1/-1;margin-top:6px}
+#quality-plot {max-width:960px}
+#view-evidence .ledger-scroll {overflow:auto;max-height:66vh}
+.ledger-scroll thead {position:sticky;top:0;background:var(--raised);z-index:1}
+.ledger-scroll tbody tr {cursor:pointer}
+.ledger-scroll tbody tr:is(:hover,:focus-within){background:var(--raised)}
+.evidence-outcome {color:var(--neutral);font:14px 'Inter Tight',sans-serif}
+@media(max-width:900px){.arena-workspace,.tradeoff-layout{grid-template-columns:1fr}.lab-chart .chart-tick,.lab-chart .chart-row-label{font-size:14px}}
+@media(max-width:600px){#view-evidence .evidence-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.arena-workspace{gap:12px}#view-arena .arena-config,#view-arena .arena-verdict{padding:16px}#quality-plot{overflow:auto}#quality-plot .lab-chart{min-width:610px}.tradeoff-layout{overflow:auto}}
+@media(prefers-reduced-motion:reduce){.arena-verdict.is-revealed{animation:none}}
+.ledger-scroll th .sort-ledger {background:transparent;border:0;padding:0;color:var(--muted);font:inherit}
+.ledger-scroll th[aria-sort=ascending] button::after {content:' ↑'}
+.ledger-scroll th[aria-sort=descending] button::after {content:' ↓'}
+#view-arena :where(details,pre,td,button,select),#view-evidence :where(td,button,select){font-size:14px}

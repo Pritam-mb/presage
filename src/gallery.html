@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; connect-src 'none'; worker-src 'self' blob:; font-src 'self'; object-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'">
+<title>SpoofLab Component Gallery — Dev Only</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="styles/capture.css">
+<link rel="stylesheet" href="styles/evidence.css">
+<link rel="stylesheet" href="ml.css">
+<link rel="stylesheet" href="styles/gallery.css">
+</head>
+<body>
+<div class="dev-banner" role="note">
+  <svg class="ui-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m10 3 8 14H2zm0 4v5m0 2v1"/></svg>
+  DEV ONLY — Not included in production build
+</div>
+<div class="gallery-shell">
+  <header class="gallery-intro">
+    <p class="eyebrow">COMPONENT GALLERY</p>
+    <h1>SpoofLab Component Gallery</h1>
+    <p class="lede">All UI components and their states, in one place. Dev only — not shipped.</p>
+  </header>
+
+  <section class="gallery-section">
+    <h2>1 · Typography</h2>
+    <div class="type-scale">
+      <div class="type-scale-row"><span class="type-scale-size">12px</span><span class="type-12">Mono label / data annotation</span></div>
+      <div class="type-scale-row"><span class="type-scale-size">14px</span><span class="type-14">Body text — set up a trial and watch the camera feed.</span></div>
+      <div class="type-scale-row"><span class="type-scale-size">16px</span><span class="type-16">Lede — introductory text for a section.</span></div>
+      <div class="type-scale-row"><span class="type-scale-size">20px</span><span class="type-20">Panel heading</span></div>
+      <div class="type-scale-row"><span class="type-scale-size">28px</span><span class="type-28">SpoofLab / 28px</span></div>
+      <div class="type-scale-row"><span class="type-scale-size">44px</span><span class="type-44">44px Display</span></div>
+    </div>
+  </section>
+
+  <section class="gallery-section">
+    <h2>2 · Colour Palette</h2>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch-box swatch-bg"></div><span class="swatch-name">bg</span><span class="swatch-val">--bg</span></div>
+      <div class="swatch"><div class="swatch-box swatch-surface"></div><span class="swatch-name">surface</span><span class="swatch-val">--surface</span></div>
+      <div class="swatch"><div class="swatch-box swatch-raised"></div><span class="swatch-name">raised</span><span class="swatch-val">--raised</span></div>
+      <div class="swatch"><div class="swatch-box swatch-line"></div><span class="swatch-name">line</span><span class="swatch-val">--line</span></div>
+      <div class="swatch"><div class="swatch-box swatch-line-strong"></div><span class="swatch-name">line-strong</span><span class="swatch-val">--line-strong</span></div>
+      <div class="swatch"><div class="swatch-box swatch-text"></div><span class="swatch-name">text</span><span class="swatch-val">--text</span></div>
+      <div class="swatch"><div class="swatch-box swatch-muted"></div><span class="swatch-name">muted</span><span class="swatch-val">--muted</span></div>
+      <div class="swatch"><div class="swatch-box swatch-signal"></div><span class="swatch-name">signal</span><span class="swatch-val">#B8FF3C</span></div>
+      <div class="swatch"><div class="swatch-box swatch-signal-dim"></div><span class="swatch-name">signal-dim</span><span class="swatch-val">#74A828</span></div>
+      <div class="swatch"><div class="swatch-box swatch-amber"></div><span class="swatch-name">amber</span><span class="swatch-val">--amber</span></div>
+      <div class="swatch"><div class="swatch-box swatch-red"></div><span class="swatch-name">red</span><span class="swatch-val">--red</span></div>
+      <div class="swatch"><div class="swatch-box swatch-neutral"></div><span class="swatch-name">neutral</span><span class="swatch-val">--neutral</span></div>
+    </div>
+  </section>
+
+  <section class="gallery-section">
+    <h2>3 · Buttons</h2>
+    <div class="gallery-row button-row">
+      <div class="gallery-col">
+        <span class="gallery-label">PRIMARY</span>
+        <div class="gallery-row">
+          <div class="gallery-col"><span class="gallery-label">default</span><button class="primary">Start capture</button></div>
+          <div class="gallery-col"><span class="gallery-label">hover (forced)</span><button class="primary gallery-hover">Start capture</button></div>
+          <div class="gallery-col"><span class="gallery-label">disabled</span><button class="primary" disabled>Start capture</button></div>
+          <div class="gallery-col"><span class="gallery-label">busy</span><button class="primary" aria-busy="true">Start capture</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="gallery-row button-row">
+      <div class="gallery-col">
+        <span class="gallery-label">SECONDARY (outline)</span>
+        <div class="gallery-row">
+          <div class="gallery-col"><span class="gallery-label">default</span><button>Download CSV</button></div>
+          <div class="gallery-col"><span class="gallery-label">hover (forced)</span><button class="gallery-hover">Download CSV</button></div>
+          <div class="gallery-col"><span class="gallery-label">disabled</span><button disabled>Download CSV</button></div>
+          <div class="gallery-col"><span class="gallery-label">busy</span><button aria-busy="true">Download CSV</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="gallery-row button-row">
+      <div class="gallery-col">
+        <span class="gallery-label">GHOST</span>
+        <div class="gallery-row">
+          <div class="gallery-col"><span class="gallery-label">default</span><button class="ghost">Data and consent</button></div>
+          <div class="gallery-col"><span class="gallery-label">hover (forced)</span><button class="ghost gallery-hover">Data and consent</button></div>
+          <div class="gallery-col"><span class="gallery-label">disabled</span><button class="ghost" disabled>Data and consent</button></div>
+          <div class="gallery-col"><span class="gallery-label">busy</span><button class="ghost" aria-busy="true">Data and consent</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="gallery-row">
+      <div class="gallery-col">
+        <span class="gallery-label">DANGER</span>
+        <div class="gallery-row">
+          <div class="gallery-col"><span class="gallery-label">default</span><button class="danger">Clear all evidence</button></div>
+          <div class="gallery-col"><span class="gallery-label">hover (forced)</span><button class="danger gallery-hover">Clear all evidence</button></div>
+          <div class="gallery-col"><span class="gallery-label">disabled</span><button class="danger" disabled>Clear all evidence</button></div>
+          <div class="gallery-col"><span class="gallery-label">busy</span><button class="danger" aria-busy="true">Clear all evidence</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="gallery-section">
+    <h2>4 · Custom Controls</h2>
+    <div class="gallery-row gallery-row-loose">
+      <div class="gallery-col gallery-col-wide">
+        <span class="gallery-label">SELECT</span>
+        <label for="g-condition">INPUT CONDITION</label>
+        <select id="g-condition" class="control">
+          <option>A / Live baseline</option>
+          <option>B / Printed photograph</option>
+          <option>C / Screen replay</option>
+        </select>
+      </div>
+      <div class="gallery-col">
+        <span class="gallery-label">CHECKBOX</span>
+        <label class="check-option"><input type="checkbox"> Unchecked</label>
+        <label class="check-option"><input type="checkbox" checked> Checked</label>
+        <label class="check-option check-option-muted"><input type="checkbox" disabled> Disabled</label>
+      </div>
+      <div class="gallery-col gallery-col-number">
+        <span class="gallery-label">NUMBER INPUT</span>
+        <label for="g-num">TRIAL LENGTH</label>
+        <input id="g-num" class="control control-number" type="number" value="60" min="30" max="120" step="15">
+      </div>
+      <div class="gallery-col gallery-col-segments">
+        <span class="gallery-label">SEGMENTED CONTROL</span>
+        <div class="ml-segments segments-width" role="group" aria-label="View mode">
+          <button aria-pressed="true">Train</button>
+          <button aria-pressed="false">Evaluate</button>
+          <button aria-pressed="false">Inspect</button>
+        </div>
+      </div>
+      <div class="gallery-col">
+        <span class="gallery-label">TOGGLE</span>
+        <div class="toggle-wrap">
+          <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+          <span class="toggle-state">Off</span>
+        </div>
+        <div class="toggle-wrap">
+          <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          <span class="toggle-state toggle-state-on">On</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="gallery-section">
+    <h2>5 · Status Chips</h2>
+    <div class="gallery-row">
+      <div class="gallery-col">
+        <span class="gallery-label">signal (active) <span class="badge-synthetic">Synthetic example</span></span>
+        <div class="instrument-chip" data-state="signal">
+          <svg class="ui-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="4"/><path d="M10 1v3m0 12v3M1 10h3m12 0h3"/></svg>
+          <strong>PULSE</strong><span>72 bpm</span>
+        </div>
+      </div>
+      <div class="gallery-col">
+        <span class="gallery-label">attention (warning) <span class="badge-synthetic">Synthetic example</span></span>
+        <div class="instrument-chip" data-state="attention">
+          <svg class="ui-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m10 3 8 14H2zm0 4v5m0 2v1"/></svg>
+          <strong>SIGNAL</strong><span>Low quality</span>
+        </div>
+      </div>
+      <div class="gallery-col">
+        <span class="gallery-label">default (no state)</span>
+        <div class="instrument-chip">
+          <svg class="ui-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="14" height="10" rx="1"/><path d="M7 10h6"/></svg>
+          <strong>BREATH</strong><span>Waiting…</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="gallery-section">
+    <h2>6 · Cards &amp; Panels</h2>
+    <div class="gallery-row gallery-row-cards">
+      <div class="panel card-demo">
+        <div class="panel-heading">
+          <h2><span class="section-no">01</span> Configure trial</h2>
+          <span class="micro">BEFORE CAPTURE</span>
+        </div>
+        <label for="g-sel">INPUT CONDITION</label>
+        <select id="g-sel" class="control control-wide"><option>A / Live baseline</option></select>
+        <p class="card-copy">Sit still in even light with your face and upper torso visible.</p>
+      </div>
+      <div class="gallery-col">
+        <span class="badge-synthetic">Synthetic example</span>
+        <div class="stats-demo">
+          <div class="stat-card"><span class="stat-label">ACCEPTED</span><strong class="stat-value">24</strong></div>
+          <div class="stat-card"><span class="stat-label">REJECTED</span><strong class="stat-value">6</strong></div>
+          <div class="stat-card"><span class="stat-label">TOTAL</span><strong class="stat-value">30</strong></div>
+        </div>
+      </div>
+      <div class="format-grid format-demo">
+        <article class="format-card">
+          <span class="format-icon" aria-hidden="true">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="20" height="20" rx="2"/><path d="M9 12h10M9 16h6"/></svg>
+          </span>
+          <h2>Evidence archive</h2>
+          <p>Trial settings, observations and outcomes for reimport.</p>
+          <button disabled>Download JSON</button>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="gallery-section">
+    <h2>7 · Chart States</h2>
+    <p class="gallery-note">Rendered by <code>SpoofCharts.state()</code> from <code>charts.js</code>.</p>
+    <div class="gallery-row gallery-row-charts">
+      <div class="chart-cell"><span class="gallery-label">EMPTY</span><div class="chart-placeholder" id="chart-empty"></div></div>
+      <div class="chart-cell"><span class="gallery-label">LOADING</span><div class="chart-placeholder" id="chart-loading"></div></div>
+      <div class="chart-cell"><span class="gallery-label">ERROR</span><div class="chart-placeholder" id="chart-error"></div></div>
+      <div class="chart-cell"><span class="gallery-label">UNAVAILABLE</span><div class="chart-placeholder" id="chart-unavailable"></div></div>
+    </div>
+  </section>
+
+  <section class="gallery-section">
+    <h2>8 · Badges</h2>
+    <div class="gallery-row">
+      <div class="gallery-col">
+        <span class="gallery-label">SYNTHETIC EXAMPLE BADGE</span>
+        <span class="badge-synthetic">
+          <svg class="ui-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m10 3 8 14H2zm0 4v5m0 2v1"/></svg>
+          Synthetic Example
+        </span>
+      </div>
+      <div class="gallery-col"><span class="gallery-label">LEDGER BADGE — accepted</span><span class="badge">Accepted</span></div>
+      <div class="gallery-col"><span class="gallery-label">LEDGER BADGE — rejected</span><span class="badge rejected">Rejected</span></div>
+      <div class="gallery-col"><span class="gallery-label">LEDGER BADGE — inconclusive</span><span class="badge inconclusive">Inconclusive</span></div>
+    </div>
+  </section>
+
+  <section class="gallery-section">
+    <h2>9 · Nav Rail Items</h2>
+    <div class="nav-demo">
+      <p class="nav-label">WORKSPACE</p>
+      <nav aria-label="Gallery nav demo">
+        <button class="nav-button active nav-demo-button"><svg class="ui-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8V4h4m10 0h4v4m0 8v4h-4M7 20H3v-4M6 12h4l2-5 2 9 2-4h2"/></svg><span class="nav-index">01</span><span class="nav-text">Capture</span></button>
+        <button class="nav-button nav-demo-button"><svg class="ui-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 5h6v5H3zM15 14h6v5h-6zM9 7h5v9h1"/></svg><span class="nav-index">02</span><span class="nav-text">Trust Boundaries</span></button>
+        <button class="nav-button nav-demo-button"><svg class="ui-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m10 2 8 4v8l-8 4-8-4V6zM2 6l8 4 8-4M10 10v8"/></svg><span class="nav-index">03</span><span class="nav-text">Policy Arena</span></button>
+        <button class="nav-button nav-demo-button"><svg class="ui-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4v12h14M8 12V8m4 4V5m4 7V9"/></svg><span class="nav-index">04</span><span class="nav-text">Evidence</span></button>
+        <button class="nav-button nav-demo-button"><svg class="ui-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 6h14M3 10h14M3 14h14M7 3v6m6 0v6m-6 0v6"/></svg><span class="nav-index">05</span><span class="nav-text">Model Lab</span></button>
+        <button class="nav-button nav-demo-button"><svg class="ui-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M10 3v10m-4-4 4 4 4-4M4 14v3h12v-3"/></svg><span class="nav-index">06</span><span class="nav-text">Export</span></button>
+      </nav>
+    </div>
+    <div class="nav-legend">
+      <span class="gallery-label">active state → first item above</span>
+      <span class="gallery-label">inactive state → remaining items above</span>
+    </div>
+  </section>
+
+  <section class="gallery-section">
+    <h2>10 · Alert / Notice</h2>
+    <div class="notice-stack">
+      <div class="gallery-col">
+        <span class="gallery-label">DEFAULT .notice</span>
+        <div class="notice">REPORT WORKSPACE · Live SDK capture requires Electron. Import real evidence to explore reports. No synthetic signals are shown.</div>
+      </div>
+      <div class="gallery-col">
+        <span class="gallery-label">.notice WITH STRONG HEADER</span>
+        <section class="notice">
+          <strong>What this report means</strong>
+          <p class="notice-copy">“Accepted” is the experimental application policy’s verdict. Missing signals and technical failures are inconclusive. Confidence is not proof of presence.</p>
+        </section>
+      </div>
+      <div class="gallery-col">
+        <span class="gallery-label">.notice ACCENT VARIANT (left border)</span>
+        <div class="notice notice-accent">Signal quality is below the recommended threshold. Results may be unreliable. Consider recapturing in better lighting conditions.</div>
+      </div>
+    </div>
+  </section>
+</div>
+<script src="charts.js" defer></script>
+<script src="shell-ui.js" defer></script>
+<script src="gallery-init.js" defer></script>
+</body>
+</html>
