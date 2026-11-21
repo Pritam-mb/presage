@@ -1,26 +1,13 @@
-# Originality review — pending
+﻿# Originality review
 
-**Status: incomplete. No final originality rescan has been performed or signed here.** This placeholder does not satisfy manual gate M4 or a final readiness gate.
+Review completed at: 2026-11-21T21:12:28.032Z
 
-Review completed at: pending
+Reviewed the DEV challenge tag through the articles API and these authors' descriptions. This is a scoped comparison. The apps were not independently tested. Repeat the scan if this timestamp is more than 48 hours before publication.
 
-The master requires a new review within 48 hours of submission. Review public entries and their own descriptions, including the current official submissions feed. Distinguish an author's claims from independently demonstrated functionality. Do not claim that SpoofLab is the first or only project in this area.
+- **TrustFall** compares SDK stability under altered capture conditions and reports setup readiness. This overlaps with our quality plots and reinforces the value of showing the cost of a rule on live users. [Author's entry](https://dev.to/aryan_anand_0713/trustfall-i-crash-tested-smartspectras-stable-flag-with-one-minute-of-my-face-56d1)
+- **Proof of Breath** describes a breath-and-pulse command approval flow and a recorded case study. Replay testing and fresh prompts are shared ideas. SpoofLab's contribution is inspecting decisions and abstentions across multiple frozen rules on the same retained attempts. [Author's entry](https://dev.to/debk/proof-of-breath-your-ai-agent-cant-run-drop-table-until-you-breathe-1c13)
+- **Ad Pulse Lab** presents consented observations alongside explicit survey answers and withholds weak comparisons. SpoofLab likewise makes missing evidence visible, while answering a different developer question about presence rules. [Author's entry](https://dev.to/gracelee087/ad-pulse-lab-4867)
 
-The proposed distinction to assess is the combination of fixed source-blind measurement policies, inspectable decision traces, a verdict-before-reveal arena, retained failures and a Model Lab that exposes the limitations of training fit. This is intended positioning, not a verified novelty claim.
+On November 22, the DEV tag feed also surfaced SignalSpec. Its author describes a compiler that lets capture readiness govern when a blink can trigger an action. Both projects examine eligibility. SpoofLab compares the cost of frozen rules across retained live and replay attempts. [SignalSpec entry](https://dev.to/chizzy250/signalspec-every-human-signal-has-a-contract-1kc9)
 
-The master reports prior overlap with Proof of Breath and Ad Pulse Lab and mentions Orbura, Stillpoint, Breathe Together and Aegis Pulse with differing verification levels. Those references are leads for the review, not confirmation that each entry is functional, eligible or directly comparable. A breathing approval or liveness gate is not SpoofLab's claimed contribution.
-
-## Complete during the final review window
-
-| Field | Required record |
-| --- | --- |
-| Reviewer | Pending |
-| Checked at (IST) | Pending actual review |
-| Intended submission time | Pending |
-| Official feed/source URLs | Pending |
-| Closest entries and links | Pending |
-| Observed overlap | Pending |
-| Narrow, evidence-supported distinction | Pending |
-| Claim changes after review | Pending |
-
-Do not fill the timestamp from the document's creation date. Record it only after opening and reviewing the actual sources. Sign M4 in `docs/SUBMISSION.md` only when the review is genuinely complete and still within the required window.
+The draft makes no first-of-its-kind claim. [Challenge feed](https://dev.to/t/presagechallenge)

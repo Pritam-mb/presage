@@ -18,7 +18,24 @@
   function score(){scoreboard.replaceChildren(el('h2','Revealed attempts by input and policy'),el('p','Distinct trial/policy pairs only. Passes over attempts include abstentions in the denominator. Intervals do not account for repeated people or recordings. Counts describe trials, not independent participants.'));
    const groups=new Map();for(const r of revealed.values()){const key=r.condition+'|'+r.trace.policyId;if(!groups.has(key))groups.set(key,{condition:r.condition,policy:r.trace.policyId,n:0,pass:0,fail:0,abstain:0});const g=groups.get(key);g.n++;g[r.trace.decision]++;}
    const table=el('table'),head=el('tr');for(const x of ['Revealed input','Policy','Pass / attempts','Fail','Abstain','Wilson 95%'])head.append(el('th',x));table.append(head);
-   for(const g of groups.values()){const interval=wilson(g.pass,g.n),row=el('tr');for(const x of [conditions[g.condition]||g.condition,g.policy,`${g.pass} / ${g.n}`,g.fail,g.abstain,interval.map(x=>(100*x).toFixed(1)+'%').join('–')])row.append(el('td',x));table.append(row);}const wrap=el('div',null,'table-wrap');wrap.append(table);scoreboard.append(wrap);if(!groups.size)scoreboard.append(el('p','Reveal evaluated trials to populate this scoreboard.'));
+   for(const g of groups.values()){
+     const interval=wilson(g.pass,g.n),row=el('tr');
+     const passes=el('td',`${g.pass} / ${g.n}`,'arena-pass-count');
+     const bar=el('div',null,'mini-bars');
+     bar.setAttribute('aria-hidden','true');
+     for(const [count,style] of [[g.pass,'accepted'],[g.fail,'rejected'],[g.abstain,'inconclusive']]){
+       if(!count)continue;
+       const segment=el('span',null,style);
+       segment.style.flexGrow=count;
+       bar.append(segment);
+     }
+     passes.append(bar);
+     row.append(el('td',conditions[g.condition]||g.condition),el('td',g.policy),passes,
+       el('td',g.fail),el('td',g.abstain),el('td',interval.map(x=>(100*x).toFixed(1)+'%').join('–')));
+     table.append(row);
+   }
+   const wrap=el('div',null,'table-wrap');wrap.append(table);scoreboard.append(wrap);
+   if(!groups.size)scoreboard.append(el('p','Reveal evaluated trials to populate this scoreboard.'));
   }
   function evaluateTrial(trial,id){
    const measurements=P.fromTrialMeasurements(trial);const trace=P.decisionTrace(id,measurements,{trialId:trial.trialId,sourceTrialReference:'saved-trial:'+trial.trialId});

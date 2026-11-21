@@ -31,3 +31,7 @@ Model Lab uses a local Python process. It requires separate dataset consent, sen
 ## Publication boundary
 
 Publish source through a fresh, audited repository history. Keep `data/trials/`, `evidence/real/`, `.env`, recordings, artifacts and per-second series outside it. Review aggregate releases separately; a small aggregate can still reveal information about a participant. A Git ignore rule does not remove files from existing commits. Public-use permission and a completed human review are required before a demo or post includes a person's face or data.
+
+## Automatic SDK Insights
+
+SmartSpectra can automatically send derived pulse, breathing and heart-rate variability measurements with session metadata to Presage for forwarding to an LLM. SDK telemetry is disabled separately. Presage describes on-device measurement and excludes raw imagery from the Insights payload. SpoofLab makes no on-demand Insights requests. We have not measured network traffic from past sessions. [Presage Insights privacy notice](https://smartspectra.presagetech.com/docs/llm-insights/) Documentation checked November 20, 2026. Explain this processing to participants before starting a new SDK trial.

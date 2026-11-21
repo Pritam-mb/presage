@@ -1,0 +1,196 @@
+{
+  "generated_at": "2026-11-19T22:29:45.205Z",
+  "total_trials": 32,
+  "inconclusive_count": 8,
+  "by_condition": {
+    "live": 17,
+    "photo": 2,
+    "screen_replay": 10,
+    "injected_replay": 3
+  },
+  "per_condition": {
+    "live": {
+      "n": 17,
+      "conclusive": 12,
+      "inconclusive": 5,
+      "gate_accepted": 7,
+      "gate_acceptance_rate": 0.583,
+      "gate_acceptance_wilson95": [
+        0.32,
+        0.807
+      ],
+      "pulse_mean_bpm": 77.04,
+      "pulse_sd_bpm": 2.83
+    },
+    "photo": {
+      "n": 2,
+      "conclusive": 1,
+      "inconclusive": 1,
+      "gate_accepted": 0,
+      "gate_acceptance_rate": 0,
+      "gate_acceptance_wilson95": [
+        0,
+        0.793
+      ],
+      "pulse_mean_bpm": 50.57,
+      "pulse_sd_bpm": null
+    },
+    "screen_replay": {
+      "n": 10,
+      "conclusive": 8,
+      "inconclusive": 2,
+      "gate_accepted": 2,
+      "gate_acceptance_rate": 0.25,
+      "gate_acceptance_wilson95": [
+        0.071,
+        0.591
+      ],
+      "pulse_mean_bpm": 73.52,
+      "pulse_sd_bpm": 5.36
+    },
+    "injected_replay": {
+      "n": 3,
+      "conclusive": 3,
+      "inconclusive": 0,
+      "gate_accepted": 3,
+      "gate_acceptance_rate": 1,
+      "gate_acceptance_wilson95": [
+        0.438,
+        1
+      ],
+      "pulse_mean_bpm": 77.13,
+      "pulse_sd_bpm": 0.68
+    }
+  },
+  "research": {
+    "shuffled_matches": 8,
+    "shuffled_runs": 50,
+    "exploratory_trials": 16,
+    "limitations": "Training-data exploration only; not accuracy on new sessions. Counts describe dependent trials, not independent people.",
+    "strict_status": "insufficient_data",
+    "mixed_groups": 3,
+    "total_groups": 5,
+    "minimum_mixed_groups": 4,
+    "paired_n": 0,
+    "within_person_comparisons": 3,
+    "challenge_n": 4,
+    "live_challenge_usable": 6,
+    "live_challenge_hits": 6,
+    "live_challenge_inconclusive": 5,
+    "simulation_draws": 1000,
+    "challenge_table": "| Window / seconds | Required detections | Simulated passes | Draws |\n| ---: | ---: | ---: | ---: |\n| 5 | 1 | 261 | 1000 |\n| 5 | 2 | 126 | 1000 |\n| 5 | 3 | 84 | 1000 |\n| 10 | 1 | 287 | 1000 |\n| 10 | 2 | 57 | 1000 |\n| 10 | 3 | 37 | 1000 |\n| 15 | 1 | 270 | 1000 |\n| 15 | 2 | 127 | 1000 |\n| 15 | 3 | 12 | 1000 |",
+    "gate_acceptance_table": "| Declared input | Retained attempts | Conclusive | Accepted by QualityGate-v1 | Wilson 95% |\n| --- | ---: | ---: | ---: | ---: |\n| Live | 17 | 12 | 7 | 32.0%–80.7% |\n| Photograph | 2 | 1 | 0 | 0.0%–79.3% |\n| Screen replay | 10 | 8 | 2 | 7.1%–59.1% |\n| Injected replay | 3 | 3 | 3 | 43.8%–100.0% |",
+    "limits_scored_groups": 3,
+    "limits_total_groups": 5,
+    "limits_mean_auc": 0.222,
+    "limits_interval_low": 0,
+    "limits_interval_high": 0.667,
+    "limits_interval_text": "0.000–0.667",
+    "limits_includes_chance": true,
+    "limits_pooled_auc": 0.476,
+    "frozen_policy_table": "| Frozen rule (pass / fail / abstain) | Live (17) | Screen replay (10) | Injected replay (3) | Printed photo (2) |\n| --- | ---: | ---: | ---: | ---: |\n| Pulse only | 12 / 0 / 5 | 6 / 2 / 2 | 3 / 0 / 0 | 1 / 0 / 1 |\n| Quality gated | 7 / 5 / 5 | 2 / 6 / 2 | 3 / 0 / 0 | 0 / 1 / 1 |\n| Pulse + blink | 3 / 4 / 10 | 0 / 4 / 6 | 0 / 0 / 3 | 0 / 0 / 2 |",
+    "ml_consented": 23,
+    "naive_file_pass": 3,
+    "gated_live_pass": 7,
+    "naive_live_pass": 12,
+    "blink_live_pass": 3,
+    "failure_text": "low frame rate (2), manual (6)",
+    "frozen_policy_n": 96,
+    "naive_photo_pass": 1,
+    "naive_photo_n": 2,
+    "gated_live_fail": 5,
+    "live_n": 17,
+    "blink_screen_pass": 0,
+    "naive_screen_pass": 6,
+    "gated_screen_pass": 2,
+    "blink_screen_abstain": 6,
+    "blink_screen_n": 10,
+    "blink_live_abstain": 10
+  },
+  "completed": 24,
+  "incomplete": 8,
+  "incomplete_reasons": {
+    "low_frame_rate": 2,
+    "manual": 6
+  },
+  "policy_matrix": {
+    "pulse-only-v1": {
+      "live": {
+        "attempts": 17,
+        "pass": 12,
+        "fail": 0,
+        "abstain": 5
+      },
+      "screen_replay": {
+        "attempts": 10,
+        "pass": 6,
+        "fail": 2,
+        "abstain": 2
+      },
+      "injected_replay": {
+        "attempts": 3,
+        "pass": 3,
+        "fail": 0,
+        "abstain": 0
+      },
+      "printed_photo": {
+        "attempts": 2,
+        "pass": 1,
+        "fail": 0,
+        "abstain": 1
+      }
+    },
+    "quality-gated-v1": {
+      "live": {
+        "attempts": 17,
+        "pass": 7,
+        "fail": 5,
+        "abstain": 5
+      },
+      "screen_replay": {
+        "attempts": 10,
+        "pass": 2,
+        "fail": 6,
+        "abstain": 2
+      },
+      "injected_replay": {
+        "attempts": 3,
+        "pass": 3,
+        "fail": 0,
+        "abstain": 0
+      },
+      "printed_photo": {
+        "attempts": 2,
+        "pass": 0,
+        "fail": 1,
+        "abstain": 1
+      }
+    },
+    "pulse-plus-blink-v1": {
+      "live": {
+        "attempts": 17,
+        "pass": 3,
+        "fail": 4,
+        "abstain": 10
+      },
+      "screen_replay": {
+        "attempts": 10,
+        "pass": 0,
+        "fail": 4,
+        "abstain": 6
+      },
+      "injected_replay": {
+        "attempts": 3,
+        "pass": 0,
+        "fail": 0,
+        "abstain": 3
+      },
+      "printed_photo": {
+        "attempts": 2,
+        "pass": 0,
+        "fail": 0,
+        "abstain": 2
+      }
+    }
+  }
+}

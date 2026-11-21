@@ -28,6 +28,17 @@ async function evaluate(expression){const r=await send('Runtime.evaluate',{expre
   assert.equal(await evaluate('document.querySelector("#preview-banner").hidden'),false);
   assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth'),true,'Desktop must not overflow');
   const screenshot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:true});fs.writeFileSync(path.join(artifact,'capture-workspace.png'),Buffer.from(screenshot.data,'base64'));
+  // Local visual review artifacts contain only empty screens / synthetic test state.
+  for(const width of [1440,390]){
+    await send('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:width===390});
+    for(const view of ['capture','trust','evidence','ml','arena']){
+      await evaluate(`document.querySelector('[data-view="${view}"]').click()`);
+      assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth'),true,`${view} must not overflow at ${width}px`);
+      const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+      fs.writeFileSync(path.join(artifact,`theme-${view}-${width}.png`),Buffer.from(shot.data,'base64'));
+    }
+  }
+  await send('Emulation.setDeviceMetricsOverride',{width:1440,height:1150,deviceScaleFactor:1,mobile:false});
   await evaluate('document.querySelector("[data-view=evidence]").click()');
   assert.equal(await evaluate('document.querySelector("#view-evidence").hidden'),false);
   const fixture=path.join(artifact,'synthetic-test-only.json');fs.writeFileSync(fixture,JSON.stringify(R.report([trial(),trial({trialId:'synthetic-inconclusive',condition:'injected_replay',samples:[]})])));

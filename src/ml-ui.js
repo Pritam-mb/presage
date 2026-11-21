@@ -92,7 +92,7 @@
     function field(label,id,type='text'){const wrap=el('div'),l=el('label',label),input=el(type==='select'?'select':'input');input.id=id;l.htmlFor=id;if(type!=='select')input.type=type;wrap.append(l,input);return {wrap,input};}
     const nav=el('button',null,'nav-button');nav.dataset.view='ml';nav.append(el('span','04'),doc.createTextNode('Model Lab'));doc.querySelector('nav').append(nav);
     const view=el('section',null,'view');view.id='view-ml';view.hidden=true;doc.querySelector('main').insertBefore(view,doc.querySelector('main > footer'));
-    const intro=el('div',null,'page-intro'),head=el('div');head.append(el('p','LOCAL LEARNING / EXPLORATORY EVIDENCE','eyebrow'),el('h1','A good training fit can mislead.'),el('p','Start with the shuffled-label control, then inspect which measurements influenced each prediction.','lede'));intro.append(head);view.append(intro);
+    const intro=el('div',null,'page-intro'),head=el('div');head.append(el('p','LOCAL LEARNING / EXPLORATORY EVIDENCE','eyebrow'),el('h1','Model Lab'),el('p','Start with the shuffled-label control, then inspect which measurements influenced each prediction.','lede'));intro.append(head);view.append(intro);
     view.append(el('div','Experimental condition classifier. Model scores are uncalibrated and cannot establish identity, live presence or attack resistance. Training and reports remain local; no LLM or cloud service is used.','notice'));
     const purpose=el('details');purpose.id='ml-purpose';purpose.append(el('summary','What does this ML classify?'),el('p','It learns differences between the live and non-live labels attached to your measured trials. Pulse availability, stability and capture quality can influence its scores. A replay can preserve the same physiological information as a live capture.'),el('p','The failure explorer keeps training predictions and feature contributions inspectable. No model score proves that someone is physically present. Use Policy Arena to test fixed assumptions; use Model Lab to inspect learned assumptions.'));view.append(purpose);
     const status=el('p','No dataset exported or evaluation loaded.','status');status.id='ml-status';status.setAttribute('role','status');view.append(status);
@@ -101,8 +101,8 @@
     const selectField=field('TRIAL','ml-trial','select'),grid=el('div',null,'ml-fields');panel.append(selectField.wrap);const fields={};
     for(const [key,label] of [['participantId','PARTICIPANT ALIAS'],['sessionId','SESSION ALIAS'],['recordingGroupId','RECORDING GROUP']]){const f=field(label,`ml-${key}`);f.input.maxLength=80;fields[key]=f.input;grid.append(f.wrap);}panel.append(grid);
     const consent=el('label',null,'check-row'),check=el('input');check.type='checkbox';check.id='ml-dataset-consent';consent.append(check,el('span','I have explicit consent to include this trial’s physiological measurements and group aliases in a locally exported ML dataset.'));panel.append(consent);
-    const save=button('Save trial metadata',()=>{if(isBusy())return notify('Stop capture before editing the dataset.');const trial=current();if(!trial)return;try{trial.ml=metadata({...Object.fromEntries(Object.entries(fields).map(([k,v])=>[k,v.value])),datasetConsent:check.checked});window.dispatchEvent(new Event('spooflab:metadata-changed'));notify('Grouping and consent updated. Desktop changes are saved locally; check Evidence Report for save status.');refresh();}catch(error){notify(error.message);}});
-    const revoke=button('Remove dataset consent',()=>{if(isBusy())return notify('Stop capture first.');const t=current();if(t){t.ml={...(t.ml||{}),datasetConsent:false};window.dispatchEvent(new Event('spooflab:metadata-changed'));check.checked=false;refresh();notify('This trial will be excluded from ML dataset export.');}});
+    const save=button('Save trial metadata',()=>{if(isBusy())return notify('Stop capture before editing the dataset.');const trial=current();if(!trial)return;try{trial.ml=metadata({...Object.fromEntries(Object.entries(fields).map(([k,v])=>[k,v.value])),datasetConsent:check.checked});window.dispatchEvent(new CustomEvent('spooflab:metadata-changed',{detail:trial.trialId}));notify('Grouping and consent updated. Desktop changes are saved locally; check Evidence Report for save status.');refresh();}catch(error){notify(error.message);}});
+    const revoke=button('Remove dataset consent',()=>{if(isBusy())return notify('Stop capture first.');const t=current();if(t){t.ml={...(t.ml||{}),datasetConsent:false};window.dispatchEvent(new CustomEvent('spooflab:metadata-changed',{detail:t.trialId}));check.checked=false;refresh();notify('This trial will be excluded from ML dataset export.');}});
     const exportButton=button('Export consented dataset ↓',()=>{if(isBusy())return notify('Stop capture before exporting.');const selected=getTrials().filter(eligibleMetadata);if(!selected.length)return notify('No trials have complete grouping and explicit dataset consent.');download(JSON.stringify(datasetForTraining(selected),null,2),'application/json','json');notify(`Exported ${selected.length} consented trials. Technical/quality exclusions and group sufficiency are checked by the Python trainer.`);});
     const actions=el('div',null,'action-row');actions.append(save,revoke,exportButton);panel.append(actions);const count=el('p',null,'field-help');count.id='ml-dataset-count';panel.append(count);view.append(panel);
     const modeField=field('TRAINING MODE','ml-training-mode','select');
@@ -121,6 +121,8 @@
     const training=el('section',null,'panel');training.append(el('h2','2 / Train locally'),modeField.wrap,trainButton,el('p','The desktop button starts a local Python process using only consented trials. It sends no data to a cloud service. Export a dataset to retain it or use this command from the project folder:'),command,el('p','Exploratory mode fits and explains the existing training records. Strict mode additionally checks matched independent groups before any held-out evaluation. Small or confounded datasets produce an insufficient-data report in strict mode; this does not remove the exploratory models. Keep failed capture records in the original evidence ledger.'));view.append(training);
     const results=el('section',null,'panel');results.append(el('h2','3 / Inspect model behavior'));const input=el('input');input.id='ml-evaluation-file';input.type='file';input.accept='.json,application/json';const label=el('label','IMPORT LOCAL EVALUATION JSON');label.htmlFor=input.id;results.append(label,input);
     const clear=button('Clear imported evaluation',()=>{evaluations.delete(modeField.input.value);evaluation=null;renderEvaluation();notify('Evaluation cleared from memory. Files on disk are unchanged.');});results.append(clear);const output=el('div');output.id='ml-results';results.append(output);view.append(results);
+    const preparation=el('details',null,'ml-preparation');preparation.append(el('summary','Prepare trial groups and dataset consent'));panel.before(preparation);preparation.append(panel);
+    intro.after(headline);
     input.addEventListener('change',async()=>{try{if(isBusy())throw new Error('Stop capture before importing evaluations.');const file=input.files[0];if(!file||file.size>25_000_000)throw new Error('Choose an evaluation JSON file no larger than 25 MB.');setEvaluation(parseEvaluation(await file.text()));notify('Evaluation imported and consistency checked. Imported evidence and split labels remain unauthenticated.');}catch(error){notify(`Import failed: ${error.message}`);}finally{input.value='';}});
     function setEvaluation(report){const mode=report.evaluationMode==='logo_limits'?'loocv':report.evaluationMode==='training_only'?'exploratory':'grouped';evaluations.set(mode,report);evaluation=report;modeField.input.value=mode;updateCommand();renderEvaluation();}
     function notify(text){status.textContent=text;}
@@ -137,14 +139,24 @@
         headline.append(el('h2','Mean within-group AUC'),el('strong',format(limits.meanWithinGroupAuc),'ml-headline-number'),
           el('p',`Exploratory 95% group-resampling interval: ${interval}. AUC was measurable in ${limits.mixedGroupsScored} of ${limits.folds.length} held-out groups.`),
           el('p',`Shuffled-label training control: ${limits.trainingControl.matchOrExceedReal} of 50 fits matched or exceeded the real-label training fit.`));
-        const table=el('table'),header=el('tr');
-        for(const name of ['Held-out group','Live','Non-live','AUC','Result'])header.append(el('th',name));
-        table.append(header);
+        const table=el('table'),header=el('tr'),thead=el('thead'),tbody=el('tbody');
+        for(const name of ['Held-out group','Live','Non-live','AUC and 0.5 reference','Result']){
+          const cell=el('th',name);cell.scope='col';header.append(cell);
+        }
+        thead.append(header);table.append(thead,tbody);
         const statuses={measured:'Scored',held_out_one_class:'Held-out set has one class',training_one_class:'Training set has one class'};
         for(const fold of limits.folds){
           const row=el('tr');
-          for(const value of [fold.group,fold.live,fold.nonLive,format(fold.auc),statuses[fold.status]])row.append(el('td',String(value)));
-          table.append(row);
+          for(const value of [fold.group,fold.live,fold.nonLive])row.append(el('td',String(value)));
+          const score=el('td',null,'auc-cell');
+          if(fold.auc!==null){
+            const track=el('span',null,'auc-track'), marker=el('span',null,'auc-marker');
+            track.setAttribute('aria-hidden','true');
+            marker.style.left=`${fold.auc*100}%`;
+            track.append(marker);score.append(track);
+          }
+          score.append(el('strong',format(fold.auc)));
+          row.append(score,el('td',statuses[fold.status]));tbody.append(row);
         }
         const wrap=el('div',null,'table-wrap');wrap.append(table);
         output.append(wrap,el('p',`Pooled AUC: ${format(limits.pooledAuc)}. This compares scores across different fitted models.`));
@@ -178,7 +190,23 @@
       function inspect(p){inspector.replaceChildren(el('h3',`${p.trialId}: ${p.correct?'correct':'incorrect'} experimental classification`),el('p',`Actual: ${p.condition} · estimated live-like probability ${(p.probability*100).toFixed(1)}% (uncalibrated). ${scope} record; fold ${p.fold}.`),el('p','Contributions explain this model’s log-odds calculation, not a causal explanation of physiology or proof of live presence. Positive contributions push toward the live label.'),el('p',`Base log-odds: ${p.baseValue.toFixed(4)}. Base plus contributions reconstructs this prediction.`));const t=el('table'),h=el('tr');for(const x of ['Feature','Value','Log-odds contribution'])h.append(el('th',x));t.append(h);for(const c of [...p.contributions].sort((a,b)=>Math.abs(b.contribution)-Math.abs(a.contribution))){const row=el('tr');row.append(el('td',c.feature),el('td',c.value===null?'Missing / train-fitted imputation':c.value.toFixed(4)),el('td',`${c.contribution>=0?'+':''}${c.contribution.toFixed(4)}`,c.contribution>=0?'ml-positive':'ml-negative'));t.append(row);}const sourceTrial=getTrials().find(t=>t.trialId===p.trialId);
         if(sourceTrial&&window.SpoofPolicies){const measurements=window.SpoofPolicies.fromTrialMeasurements(sourceTrial),checks=window.SpoofPolicies.POLICIES.map(policy=>({id:policy.id,...window.SpoofPolicies.evaluate(policy.id,measurements)}));const comparison=el('section',null,'ml-policy-comparison');comparison.id='ml-policy-comparison';comparison.append(el('strong','Fixed policies versus model output'),el('p',`Model label: ${p.predictedLabel?'live':'non-live'} (experimental). A policy pass/fail is a different measurement rule, not an authentication label.`));for(const check of checks){const disagrees=(check.decision==='pass'&&p.predictedLabel===0)||(check.decision==='fail'&&p.predictedLabel===1);comparison.append(el('p',`${check.id}: ${check.decision}${disagrees?' / conflicts with model direction':check.decision==='abstain'?' / cannot compare direction':''}. ${check.reasons.join(' ')}`));}comparison.append(el('p',window.SpoofPolicies.LIMITATION));inspector.append(comparison);}
         else inspector.append(el('p','Import the matching saved trial to compare these model predictions with the fixed measurement policies.'));
-        const wrap=el('div',null,'table-wrap');wrap.append(t);inspector.append(wrap);}
+        const figure=el('figure',null,'effect-plot');
+        figure.append(el('figcaption','Feature contributions to this prediction'));
+        const ordered=[...p.contributions].sort((a,b)=>Math.abs(b.contribution)-Math.abs(a.contribution));
+        const largest=Math.max(0,...ordered.map(item=>Math.abs(item.contribution)));
+        for(const item of ordered){
+          const row=el('div',null,'effect-row');
+          const track=el('span',null,'effect-track');
+          const bar=el('i',null,item.contribution<0?'below':'above');
+          bar.style.width=(largest ? 50*Math.abs(item.contribution)/largest : 0)+'%';
+          track.append(bar);
+          row.append(el('span',item.feature.replaceAll('_',' ')),track,el('code',(item.contribution>0?'+':'')+item.contribution.toFixed(3)));
+          figure.append(row);
+        }
+        const details=el('details',null,'coefficient-table');
+        const wrap=el('div',null,'table-wrap');
+        wrap.append(t);details.append(el('summary','Inspect exact feature values and contributions'),wrap);
+        inspector.append(figure,details);}
       function renderPredictions(){predictions.replaceChildren();inspector.replaceChildren();const model=r.models[Number(modelField.input.value)],chosen=model.predictions.filter(p=>filterField.input.value==='errors'?!p.correct:filterField.input.value==='borderline'?p.probability>=.4&&p.probability<=.6:true);if(!chosen.length){predictions.append(el('p','No predictions match this filter.'));return;}const t=el('table'),h=el('tr');for(const x of ['Trial','Actual','Live-like score','Prediction','Inspect'])h.append(el('th',x));t.append(h);for(const p of chosen){const row=el('tr');row.append(el('td',p.trialId.slice(0,16)),el('td',p.condition),el('td',`${(p.probability*100).toFixed(1)}%`),el('td',`${p.predictedLabel?'live':'non-live'} · ${p.correct?'correct':'incorrect'}`));const cell=el('td');cell.append(button('Explain',()=>inspect(p)));row.append(cell);t.append(row);}const wrap=el('div',null,'table-wrap');wrap.append(t);predictions.append(wrap);inspect(chosen[0]);}
       const logisticIndex=r.models.findIndex(m=>m.name==='Logistic regression');if(trainingOnly&&logisticIndex>=0)modelField.input.value=String(logisticIndex);modelField.input.addEventListener('change',renderPredictions);filterField.input.addEventListener('change',renderPredictions);renderPredictions();
       const splitDetails=el('details');splitDetails.append(el('summary','Inspect group split provenance and exclusions'),el('pre',JSON.stringify({splits:r.splits,excluded:r.dataset.excluded},null,2)));output.append(splitDetails);

@@ -35,3 +35,21 @@ test('identical duplicate captures do not inflate the ledger and conflicting cop
   assert.equal((await fs.readdir(dir)).length,3,'Conflicting originals must remain available for review');
  }finally{await store.clear();await fs.rmdir(dir);}
 });
+test('autosave restores a ledger larger than the single-file import limit', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'spooflab-large-ledger-'));
+  const store = createStore(dir);
+  try {
+    const notes = 'a'.repeat(12_600_000);
+    const records = ['first', 'second'].map(trialId => trial({trialId, notes}));
+    const report = {schema:R.SCHEMA, trials:records};
+    assert.throws(() => R.parseReport(JSON.stringify(report)), /25 MB/);
+    assert.equal((await store.save(report)).saved, 2);
+    const restored = await store.load();
+    assert.deepEqual(restored.issues, []);
+    assert.deepEqual(restored.trials.map(t => [t.trialId, t.notes.length]),
+      [['first', notes.length], ['second', notes.length]]);
+  } finally {
+    await store.clear();
+    await fs.rmdir(dir);
+  }
+});

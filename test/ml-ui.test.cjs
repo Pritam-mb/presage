@@ -11,3 +11,9 @@ test('grouped reports require matched independent evidence rather than mechanica
  const forged=report();forged.dataset.independentEvidenceAudit.mixedGroups=2;assert.throws(()=>M.parseEvaluation(JSON.stringify(forged)),/audit/);
  const withheld=report();withheld.status='insufficient_data';assert.throws(()=>M.parseEvaluation(JSON.stringify(withheld)),/must not contain/);
 });
+
+function limitsReport(){return {schema:'spooflab-ml-evaluation-v1',status:'limits_report',evaluationMode:'logo_limits',featureNames:['pulse_coverage'],dataset:{totalTrials:6,eligibleTrials:6,independentGroups:3},splits:[],models:[],recommendations:['Collect both classes in each group.'],narrative:'Synthetic limits fixture only.',limitations:['Descriptive interval.'],logoLimits:{folds:[{group:1,live:1,nonLive:1,auc:0.5,status:'measured'},{group:2,live:1,nonLive:1,auc:null,status:'held_out_one_class'},{group:3,live:0,nonLive:2,auc:null,status:'held_out_one_class'}],mixedGroupsScored:1,meanWithinGroupAuc:0.5,descriptiveInterval:null,pooledAuc:null,trainingControl:{runs:50,realLabelMatches:4,matchOrExceedReal:10}}};}
+test('limits reports import only with consistent folds, counts and interval',()=>{
+ assert.equal(M.parseEvaluation(JSON.stringify(limitsReport())).logoLimits.folds.length,3);
+ for(const mutate of [r=>r.logoLimits.folds[0].nonLive=3,r=>r.logoLimits.mixedGroupsScored=2,r=>r.logoLimits.descriptiveInterval=[0.6,0.2],r=>r.logoLimits.folds[0].auc=null,r=>Object.assign(r,{status:'evaluated'}),r=>r.logoLimits.trainingControl.matchOrExceedReal=51]){const r=limitsReport();mutate(r);assert.throws(()=>M.parseEvaluation(JSON.stringify(r)));}
+});

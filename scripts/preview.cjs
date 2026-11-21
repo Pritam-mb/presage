@@ -8,7 +8,7 @@ function startServer(port = 4173) {
     if (url.pathname === '/') { res.writeHead(302, { Location: '/src/index.html' }); res.end(); return; }
     const name = url.pathname;
     // Serve only public UI files; never expose reports, keys, dotfiles or dependencies.
-    if (!/^\/(src\/(index\.html|style\.css|ml\.css|ml-ui\.js|arena\.js|policies\.cjs|camera\.cjs|evidence\.cjs|renderer\.js|protocol\.cjs|reports\.cjs)|dist\/sdk\.js)$/.test(name)) { res.writeHead(404); res.end('Not found'); return; }
+    if (!/^\/(src\/(index\.html|style\.css|theme\.css|ml\.css|ml-ui\.js|arena\.js|policies\.cjs|camera\.cjs|evidence\.cjs|renderer\.js|protocol\.cjs|reports\.cjs)|dist\/sdk\.js)$/.test(name)) { res.writeHead(404); res.end('Not found'); return; }
     const file = path.join(root, name);
     fs.readFile(file, (error, data) => {
       if (error) { res.writeHead(404); res.end('Not built'); return; }

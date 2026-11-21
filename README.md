@@ -33,7 +33,7 @@ py -m venv .venv
 npm run test:ml
 ```
 
-Desktop training and ML tests prefer the local environment; `SPOOFLAB_PYTHON` can specify another interpreter. No external AI service is used.
+Desktop training and ML tests prefer the local environment; `SPOOFLAB_PYTHON` can specify another interpreter. Model Lab training runs locally.
 
 Exploratory mode fits logistic regression and optional XGBoost to the same records it explains. Its headline uses the actual shuffled-label control, not accuracy on new sessions. Scores are uncalibrated.
 
@@ -47,7 +47,7 @@ Consent is required before processing. Dataset consent, recording-source permiss
 
 - **Storage and retention:** desktop measurements, metadata and failures autosave in `data/trials/` and restore at startup until deleted. No app video, image or audio recording. Browser-preview reports stay in memory unless exported.
 - **Deletion:** Clear all deletes the desktop trial store and clears reports in memory. Exported reports, numeric diagnostics, analysis artifacts and operator-created recordings remain until deleted separately. Revoking dataset consent excludes future exports; it cannot erase existing copies.
-- **Sharing:** no automatic report uploads, cloud dataset, AI service or app analytics. Python ML runs locally. Review physiological exports before sharing.
+- **Sharing:** no automatic report uploads or cloud training dataset. SmartSpectra can automatically send derived pulse, breathing and heart-rate variability measurements with session metadata to Presage for forwarding to an LLM. SDK telemetry is disabled separately. Python ML runs locally. Review physiological exports before sharing.
 - **SDK telemetry:** disabled explicitly. SDK authentication and runtime network behavior still apply.
 
 Presage states: “Telemetry does not attach raw video/image frames or measured physiological values.” [Official telemetry page](https://smartspectra.presagetech.com/docs/telemetry-and-privacy), read November 15, 2026. This describes telemetry, not all SDK operations. See [PRIVACY.md](docs/PRIVACY.md).

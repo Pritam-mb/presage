@@ -28,3 +28,8 @@ Real-time generated avatars, adaptive puppets, a live accomplice, a compromised 
 A signed, stored or passing result does not prove presence. A hash identifies bytes; it does not establish their origin or owner. Imported reports are unauthenticated. The operator's declared condition and consent are not made trustworthy by passing the measurement pipeline.
 
 Every new policy trace must include: **Input provenance not established. Not proof of live human presence.**
+## Developer checklist
+
+- Record capture completion, the rule decision and input provenance separately. A plausible pulse can occur in a recording.
+- Keep abstentions visible. Provide a retry or an alternate approval path for missing evidence.
+- For sensitive actions, bind a fresh server-issued challenge to the intended action and session. SpoofLab does not evaluate that server-side control.

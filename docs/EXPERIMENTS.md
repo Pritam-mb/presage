@@ -36,3 +36,9 @@ The master schedules one evidence top-up session of at most 90 minutes: five liv
 ## Reports
 
 Show trial counts next to proportions. Wilson intervals describe observed pass proportions and do not remove participant/recording dependence. Distinguish technical incompleteness, no usable signal, policy failure and abstention. Post numbers must come from the generated aggregate/analysis files through tokens. No outcome is manufactured to satisfy a gate.
+
+## Which ledger the draft uses
+
+The November 20 refresh compared trial IDs in the previous 33-attempt derived export against the desktop ledger. Five IDs occurred only in that export (three live, one screen replay, one photograph). Four occurred only in the desktop ledger (three live, one screen replay). These are different snapshots. Removing duplicates alone does not explain the discrepancy.
+
+Run `npm run summarize` with the local desktop ledger and Python environment available, then `npm run post`. The refresh reads the validated desktop store and rebuilds the derived trial exports, policy traces, analyses and ML reports before generating `evidence/summary.json`. The post reads its counts from that aggregate. Early endings are classified by the saved stop reason. A low-frame-rate warning on a manually ended trial does not establish why the operator stopped it.

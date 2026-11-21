@@ -5,9 +5,19 @@ function createStore(root){
  const safe=id=>{if(!/^[A-Za-z0-9_-]{1,100}$/.test(id))throw new Error('Invalid saved trial ID');return path.join(root,id+'.json');};
  function serialize(task){const result=queue.then(task);queue=result.catch(()=>{});return result;}
  return {
- save(report,secret=''){return serialize(async()=>{const text=JSON.stringify(report);const trials=R.parseReport(text);await fs.mkdir(root,{recursive:true});for(const t of trials){
-   // Keep provenance flags supplied by the originating app; parsing is validation, not an import operation here.
-   const original=report.trials.find(x=>x.trialId===t.trialId);t.imported=original.imported===true;
+ save(report,secret=''){return serialize(async()=>{
+   if(report?.schema!==R.SCHEMA || !Array.isArray(report.trials) || report.trials.length>300)
+     throw new Error('Unsupported report schema or too many trials.');
+   const ids=new Set();
+   const trials=report.trials.map(original=>{
+     const [trial]=R.parseReport(JSON.stringify({schema:R.SCHEMA,trials:[original]}));
+     safe(trial.trialId);
+     if(ids.has(trial.trialId))throw new Error('Duplicate saved trial ID');
+     ids.add(trial.trialId);
+     trial.imported=original.imported===true;
+     return trial;
+   });
+   await fs.mkdir(root,{recursive:true});for(const t of trials){
    let data=JSON.stringify(R.report([t]),(key,value)=>['apiKey','deviceId','groupId','filePath'].includes(key)?undefined:value,2);
    if(secret)data=data.split(secret).join('[redacted]');const file=safe(t.trialId);await fs.writeFile(file+'.tmp',data,'utf8');await fs.rename(file+'.tmp',file);
  }return {saved:trials.length,path:root};});},

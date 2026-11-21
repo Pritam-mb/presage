@@ -7,7 +7,24 @@
   let cameraReadiness=null;
   const cameraToken=()=>$('camera-device').value+':'+$('camera-profile').value;
   const cameraReady=()=>cameraReadiness?.token===cameraToken()&&cameraReadiness.fps>=25&&Date.now()-cameraReadiness.at<30*60*1000;
-  async function persist(){if(!window.SpoofStorage)return;try{await window.SpoofStorage.save(R.report(trials));$('report-status').textContent='Trials saved locally in data/trials. They will restore on restart.';}catch(error){$('report-status').textContent='LOCAL SAVE FAILED: '+error.message+' — export JSON before closing.';}}
+  const pendingSaves = new Map();
+  async function persist(changed) {
+    if (!window.SpoofStorage) return true;
+    for (const trial of changed) pendingSaves.set(trial.trialId, {trial});
+    const batch = [...pendingSaves.values()];
+    if (!batch.length) return true;
+    try {
+      await window.SpoofStorage.save({schema:R.SCHEMA, trials:batch.map(item => item.trial)});
+      for (const item of batch) {
+        if (pendingSaves.get(item.trial.trialId) === item) pendingSaves.delete(item.trial.trialId);
+      }
+      $('report-status').textContent = 'Trials saved locally in data/trials. They will restore on restart.';
+      return true;
+    } catch (error) {
+      $('report-status').textContent = 'LOCAL SAVE FAILED: ' + error.message + ' — export JSON before closing.';
+      return false;
+    }
+  }
   const isElectron = /Electron\//.test(navigator.userAgent);
   const state = { run: null, cameraCheck: null, cameraRefresh: null, selectedId: null, sdk: null, adapterPromise: null, restartRequired: false };
   const conditionHelp = {
@@ -43,22 +60,105 @@
     document.querySelectorAll('.report-actions button').forEach(el => { el.disabled = value || !trials.length; });
     document.querySelector('label[for="import-file"]').setAttribute('aria-disabled', String(value));
   }
-  function draw(samples = [], duration = 60) {
-    const canvas = $('chart'), ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
-    ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#292440'; ctx.fillRect(0, 0, w * P.PROTOCOL.warmupSec / duration, h);
-    ctx.strokeStyle = '#293852'; ctx.lineWidth = 1;
-    for (let y = 20; y < h; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
-    ctx.strokeStyle = '#b9a4ff'; ctx.lineWidth = 2; ctx.beginPath();
-    let last = null;
-    for (const s of samples) {
-      if (!Number.isFinite(s.value)) continue;
-      const x = Math.max(0, Math.min(1, s.elapsedSec / duration)) * w;
-      const y = h - Math.min(Math.max(s.value, 0), 180) / 180 * (h-15) - 5;
-      if (last === null || s.elapsedSec - last > 1.5) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-      last = s.elapsedSec;
+  let chartSamples = [], chartDuration = 60;
+  let inspectTime = null;
+  const plot = $('chart');
+  plot.tabIndex = 0;
+  plot.setAttribute('aria-label', 'Pulse timeline. Use the left and right arrows to inspect recorded estimates.');
+  plot.addEventListener('pointermove', event => {
+    const bounds = plot.getBoundingClientRect();
+    inspectTime = (event.clientX - bounds.left - 37) / Math.max(1, bounds.width - 53) * chartDuration;
+    draw();
+  });
+  function clearCursor() { inspectTime = null; draw(); }
+  plot.addEventListener('pointerleave', clearCursor);
+  plot.addEventListener('blur', clearCursor);
+  plot.addEventListener('keydown', event => {
+    if (!['ArrowLeft','ArrowRight'].includes(event.key)) return;
+    event.preventDefault();
+    const times = chartSamples.filter(s => Number.isFinite(s.value) && Number.isFinite(s.elapsedSec)).map(s => s.elapsedSec);
+    const next = event.key === 'ArrowRight'
+      ? times.find(t => t > (inspectTime ?? -Infinity))
+      : times.findLast(t => t < (inspectTime ?? Infinity));
+    if (next !== undefined) inspectTime = next;
+    draw();
+  });
+  function draw(samples = chartSamples, duration = chartDuration) {
+    chartSamples = samples;
+    chartDuration = duration;
+    const canvas = $('chart');
+    const width = canvas.clientWidth, height = canvas.clientHeight;
+    if (!width || !height) return;
+    const scale = window.devicePixelRatio || 1;
+    if (canvas.width !== Math.round(width * scale) || canvas.height !== Math.round(height * scale)) {
+      canvas.width = Math.round(width * scale);
+      canvas.height = Math.round(height * scale);
     }
-    ctx.stroke(); $('chart-caption').textContent = samples.length ? `${samples.length} SDK RATE ESTIMATES · SHADED AREA = WARM-UP` : 'No samples collected';
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    const left = 37, right = width - 16, top = 22, bottom = height - 30;
+    const x = time => left + time / duration * (right - left);
+    const y = bpm => bottom - bpm / 180 * (bottom - top);
+    const warmEnd = x(Math.min(duration, P.PROTOCOL.warmupSec));
+    ctx.fillStyle = '#19281f';
+    ctx.fillRect(left, top, warmEnd - left, bottom - top);
+    ctx.font = '13px "JetBrains Mono", monospace';
+    ctx.textAlign = 'right';
+    for (const bpm of [0, 45, 90, 135, 180]) {
+      ctx.strokeStyle = '#35413a';
+      ctx.beginPath();
+      ctx.moveTo(left, y(bpm));
+      ctx.lineTo(right, y(bpm));
+      ctx.stroke();
+      ctx.fillStyle = '#aab7ae';
+      ctx.fillText(String(bpm), left - 8, y(bpm) + 4);
+    }
+    ctx.textAlign = 'center';
+    for (let tick = 0; tick <= 3; tick++) {
+      const time = duration * tick / 3;
+      ctx.fillText(Math.round(time) + 's', x(time), height - 10);
+    }
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(left, top, right - left, bottom - top);
+    ctx.clip();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#46d483';
+    ctx.fillStyle = '#a0efc3';
+    let nearest = null;
+    let previous = null, plotted = 0;
+    for (const sample of samples) {
+      if (!Number.isFinite(sample.value) || !Number.isFinite(sample.elapsedSec)) continue;
+      const point = {time:sample.elapsedSec, x:x(sample.elapsedSec), y:y(sample.value)};
+      if (inspectTime !== null && (!nearest || Math.abs(point.time - inspectTime) < Math.abs(nearest.time - inspectTime))) {
+        nearest = {...point, bpm:sample.value};
+      }
+      if (previous && point.time >= previous.time && point.time - previous.time <= 5) {
+        ctx.beginPath();
+        ctx.moveTo(previous.x, previous.y);
+        ctx.lineTo(point.x, point.y);
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      previous = point;
+      plotted++;
+    }
+    ctx.restore();
+    if (nearest) {
+      ctx.save();
+      ctx.strokeStyle = '#c9d3cc';
+      ctx.setLineDash([3,4]);
+      ctx.beginPath(); ctx.moveTo(nearest.x,top); ctx.lineTo(nearest.x,bottom); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.arc(nearest.x,nearest.y,5,0,2*Math.PI); ctx.stroke();
+      ctx.restore();
+      $('chart-caption').textContent = nearest.time.toFixed(1) + ' s · ' + nearest.bpm.toFixed(1) + ' BPM';
+      return;
+    }
+    $('chart-caption').textContent = plotted ? plotted + ' SDK rate estimates' : 'Awaiting pulse estimates';
   }
   function policyFromUI() {
     return P.validatePolicy({ ...P.PROTOCOL, durationSec: Number($('duration').value), minConfidence: Number($('confidence-threshold').value),
@@ -236,8 +336,22 @@
     if (sec >= c.deadlineSec && c.state === 'active') {
       P.closeChallenge(c); run.trial.challengeEvents.push({ event: 'closed', elapsedSec: sec, state: c.state });
     }
-    $('challenge-banner').hidden = false;
-    $('challenge-banner').textContent = c.state === 'active' ? `Fresh prompt: blink ${c.target} ${c.target === 1 ? 'time' : 'times'} in ${Math.max(0, Math.ceil(c.deadlineSec-sec))} s. Detected: ${c.blinks.length}. Then keep your eyes open.` : `Freshness check: ${c.state}. ${c.blinks.length} blink transitions observed.`;
+    const banner = $('challenge-banner');
+    const prompt = $('blink-prompt');
+    if (c.state === 'active') {
+      if (!prompt.matches(':popover-open')) {
+        $('blink-instruction').textContent = `Blink ${c.target} ${c.target === 1 ? 'time' : 'times'}`;
+        prompt.showPopover();
+        banner.textContent = $('blink-instruction').textContent + ', then keep your eyes open.';
+      }
+      $('blink-remaining').textContent = Math.max(0, Math.ceil(c.deadlineSec - sec)) + ' s left';
+      $('blink-count').textContent = c.blinks.length + ' detected';
+    } else {
+      if (prompt.matches(':popover-open')) prompt.hidePopover();
+      const message = `Blink check: ${c.state}. Requested ${c.target}, detected ${c.blinks.length}.`;
+      if (banner.textContent !== message) banner.textContent = message;
+    }
+    banner.hidden = false;
   }
   async function start() {
     if (state.run || state.cameraCheck || state.cameraRefresh) return;
@@ -254,7 +368,7 @@
     const run = { key: $('key').value.trim(), sdk: null, stream: null, url: null, cancelled: false, finalizing: false,
       captureStart: null, timestampOffset: null, lastDraw: 0, seen: Object.fromEntries(sampleArrays.map(k => [k,new Set()])),
       trial: { trialId: crypto.randomUUID(), condition, protocol, scenario:$('scenario').value.trim()||null,camera:{pipeline:$('camera-pipeline').value},startedAt: new Date().toISOString(), durationSec: 0,
-        endReason: 'starting', notes: $('notes').value, consent: { attested: true, recordingOwnerAttested:condition==='live'?null:$('recording-consent').checked, at: new Date().toISOString(), textVersion: 'consent-v3' },
+        endReason: 'starting', notes: $('notes').value, consent: { attested: true, recordingOwnerAttested:condition==='live'?null:$('recording-consent').checked, at: new Date().toISOString(), textVersion: 'consent-v4' },
         sdkVersion: 'unknown', source: { kind: condition === 'injected_replay' ? 'recording_stream' : 'webcam', fileName: condition === 'injected_replay' ? file.name : null },
         samples: [], breathingSamples: [], traceSamples: [], cardiacTraceSamples: [], faceSamples: [], validationEvents: [], processingEvents: [], errors: [], challenge: null, challengeEvents: [],
         timing: 'SDK timestamps aligned to latest sample in first packet arrival; original timestamps preserved. Wall-clock duration starts before SDK start.' } };
@@ -356,6 +470,7 @@
   }
   async function finish(run,reason) {
     if (run.finalizing || state.run !== run) return;
+    if ($('blink-prompt').matches(':popover-open')) $('blink-prompt').hidePopover();
     run.finalizing = true; run.cancelled = true; clearInterval(run.timer);
     run.trial.durationSec = Math.min(elapsed(run), run.trial.protocol.durationSec); run.trial.endReason = reason;
     $('stop').disabled = true; $('status').textContent = 'Releasing capture resources…';
@@ -372,7 +487,7 @@
     busy(false); renderEvidence(); draw(run.trial.samples,run.trial.protocol.durationSec); updateTrust(run.trial);
     $('status').textContent = `Evidence retained in memory · ${run.trial.summary.outcome.replaceAll('_',' ')} · policy ${run.trial.summary.verifier.outcome}`;
     $('capture-label').textContent = 'TRIAL ENDED';
-    await persist();
+    await persist([run.trial]);
     window.dispatchEvent(new CustomEvent('spooflab:trial-saved',{detail:run.trial}));
   }
   function updateTrust(trial, provisional = false) {
@@ -385,12 +500,106 @@
     $('trust-trial-id').textContent = `${short(trial.trialId)}${trial.imported ? ' / IMPORTED · UNAUTHENTICATED' : ''}`;
     $('trust-detail').replaceChildren(node('p',`Signal availability: ${s.outcome}. Longest eligible interval: ${fmt(s.verifier.sustainedSec)} s. Technical errors: ${trial.errors.length}.`),node('pre',JSON.stringify(p,null,2)));
   }
+  $('trust-pick').addEventListener('change', () => selectTrial($('trust-pick').value, false));
+  $('quality-measure').addEventListener('change', () => drawDistribution(trials.map(t => P.summarize(t))));
+  function renderTradeoff(rows) {
+    const plot=$('tradeoff-plot');
+    plot.append(node('h3','The trade-off'),node('p','Horizontal: live attempts passed. Vertical: screen and file replays passed. Crosshairs show trial-level Wilson 95% intervals. Repeated sources limit their interpretation.'));
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('viewBox','0 0 440 230'); svg.style.maxWidth='640px'; svg.style.width='100%';
+    svg.setAttribute('role','img'); svg.setAttribute('aria-label','Policy pass shares. Exact counts follow the plot.');
+    const mark=(tag,attrs,text)=>{
+      const e=document.createElementNS(svg.namespaceURI,tag);
+      for(const [key,value] of Object.entries(attrs))e.setAttribute(key,value);
+      if(text!==undefined)e.textContent=text;
+      svg.append(e);
+    };
+    const x=p=>50+340*p,y=p=>195-160*p;
+    for(const p of [0,.5,1]){
+      mark('line',{x1:x(p),x2:x(p),y1:y(0),y2:y(1),stroke:'currentColor',opacity:.2});
+      mark('line',{x1:x(0),x2:x(1),y1:y(p),y2:y(p),stroke:'currentColor',opacity:.2});
+      mark('text',{x:x(p),y:218,fill:'currentColor','text-anchor':'middle'},p*100+'%');
+      mark('text',{x:43,y:y(p)+4,fill:'currentColor','text-anchor':'end'},p*100+'%');
+    }
+    plot.append(svg);
+    window.SpoofPolicies.POLICIES.forEach((policy,index)=>{
+      const subset=rows.filter(r=>r.policy===policy.id);
+      const live=subset.find(r=>r.condition==='live');
+      const replay=subset.filter(r=>['screen_replay','injected_replay'].includes(r.condition));
+      const n=replay.reduce((s,r)=>s+r.n,0), k=replay.reduce((s,r)=>s+r.pass,0);
+      if(!live?.n||!n){plot.append(node('p',policy.name+' - comparison unavailable'));return;}
+      const cx=x(live.pass/live.n),cy=y(k/n);
+      const h=window.SpoofArena.wilson(live.pass,live.n),v=window.SpoofArena.wilson(k,n);
+      const c=['#55875e','#af772e','#989587'][index];
+      mark('line',{x1:x(h[0]),x2:x(h[1]),y1:cy,y2:cy,stroke:c,'stroke-width':2});
+      mark('line',{x1:cx,x2:cx,y1:y(v[0]),y2:y(v[1]),stroke:c,'stroke-width':2});
+      mark('circle',{cx,cy,r:5,fill:c});mark('text',{x:cx+8,y:cy-5,fill:'currentColor'},String(index+1));
+      plot.append(node('p',(index+1)+'. '+policy.name+' - live '+live.pass+'/'+live.n+'; replay '+k+'/'+n));
+    });
+  }
+  function drawDistribution(summaries) {
+    const plot = $('quality-plot');
+    plot.replaceChildren();
+    if (!trials.length) {
+      plot.append(node('p','Collect or import trials to compare their signal quality.'));
+      return;
+    }
+    const stable = $('quality-measure').value === 'stable';
+    const axis = node('div', null, 'quality-axis');
+    for (const tick of ['0%','25%','50%','75%','100%']) axis.append(node('span',tick));
+    plot.append(axis);
+    for (const [condition,label] of Object.entries(P.CONDITIONS)) {
+      const points = [];
+      let count = 0;
+      trials.forEach((trial,i) => {
+        if (trial.condition !== condition) return;
+        count++;
+        const s = summaries[i];
+        const value = stable ? s.stableFraction : s.meanConfidence;
+        if (Number.isFinite(value)) points.push({trial, value:stable ? value * 100 : value});
+      });
+      const row = node('div',null,'quality-row-plot');
+      const caption = node('div',label,'quality-caption');
+      caption.append(node('small',points.length + ' of ' + count + ' measured'));
+      const track = node('div',null,'quality-track');
+      const lanes = [];
+      for (const point of points.sort((a,b) => a.value - b.value)) {
+        let lane = lanes.findIndex(last => point.value - last >= 6);
+        if (lane < 0) lane = lanes.length;
+        lanes[lane] = point.value;
+        const dot = node('button',null,'quality-point');
+        dot.title = label + ' · ' + point.value.toFixed(1) + '% · ' + short(point.trial.trialId);
+        dot.setAttribute('aria-label',dot.title);
+        dot.style.left = point.value + '%';
+        dot.style.top = (8 + lane * 18) + 'px';
+        dot.onclick = () => selectTrial(point.trial.trialId);
+        track.append(dot);
+      }
+      if (!points.length) track.append(node('small','Unavailable'));
+      track.style.minHeight = Math.max(32, lanes.length * 18 + 12) + 'px';
+      row.append(caption,track);plot.append(row);
+    }
+  }
   function renderEvidence() {
     const sums = trials.map(t=>P.summarize(t));
+    drawDistribution(sums);
+    const picker = $('trust-pick');
+    picker.replaceChildren(new Option('Select a saved trial',''));
+    for (const t of trials) picker.add(new Option(P.CONDITIONS[t.condition] + ' · ' + short(t.trialId), t.trialId));
+    picker.disabled = !trials.length;
+    if (state.selectedId) picker.value = state.selectedId;
     $('total-trials').textContent = trials.length;
     const completedCount=trials.filter(t=>t.endReason==='completed'&&t.durationSec>=t.protocol.durationSec-.25).length;
     $('total-completed').textContent=completedCount;
     $('total-incomplete').textContent=trials.length-completedCount;
+    const early=new Map();
+    for(const t of trials){
+      if(t.endReason==='completed' && t.durationSec>=t.protocol.durationSec-.25)continue;
+      const label=String(t.endReason==='completed'?'short duration':t.endReason||'unknown').replaceAll('_',' ');
+      early.set(label,(early.get(label)||0)+1);
+    }
+    $('early-endings').textContent=early.size?'Early endings: '+[...early].map(([k,n])=>k+' ('+n+')').join(', '):'No early endings in the current ledger.';
+    $('tradeoff-plot').replaceChildren();
     const frozen=$('frozen-policy-summary');frozen.replaceChildren();
     if(!trials.length)frozen.append(node('p','No saved observations to evaluate.'));
     else if(window.SpoofPolicies){
@@ -405,14 +614,43 @@
           const row=byCondition.get(key);row[decision]++;row.n++;
         }
       }
-      for(const result of byCondition.values()){const row=node('tr');for(const value of [P.CONDITIONS[result.condition],result.policy,result.pass,result.fail,result.abstain,result.n])row.append(node('td',value));body.append(row);}
+      renderTradeoff([...byCondition.values()]);
+      for (const result of byCondition.values()) {
+        const row = node('tr');
+        row.append(node('td', P.CONDITIONS[result.condition]), node('td', result.policy));
+        for (const outcome of ['pass','fail','abstain']) {
+          const cell = node('td', result[outcome], 'count-cell');
+          const track = node('span', null, 'count-track');
+          const fill = node('i', null, outcome);
+          fill.style.width = (100 * result[outcome] / result.n) + '%';
+          track.setAttribute('aria-hidden','true');
+          track.append(fill);cell.append(track);row.append(cell);
+        }
+        row.append(node('td', result.n));body.append(row);
+      }
       frozen.append(table,node('p',window.SpoofPolicies.LIMITATION,'field-help'));
     }
 
-    for (const kind of ['accepted','rejected','inconclusive']) $(`total-${kind}`).textContent = sums.filter(s=>s.verifier.outcome===kind).length;
-    $('empty').hidden = !!trials.length; $('trials').replaceChildren();
+    const outcomes = ['accepted', 'rejected', 'inconclusive'];
+    const outcomeCounts = outcomes.map(kind => sums.filter(s => s.verifier.outcome === kind).length);
+    for (const [index, kind] of outcomes.entries()) $(`total-${kind}`).textContent = outcomeCounts[index];
+    $('outcome-overview').hidden = !trials.length;
+    const outcomeTrack = $('outcome-track');
+    outcomeTrack.replaceChildren();
+    for (const [index, kind] of outcomes.entries()) {
+      if (!outcomeCounts[index]) continue;
+      const segment = node('span', null, kind);
+      segment.style.flexGrow = outcomeCounts[index];
+      outcomeTrack.append(segment);
+    }
+    outcomeTrack.setAttribute('aria-label', outcomes.map((kind, index) => `${outcomeCounts[index]} ${kind}`).join(', '));
+    $('trials').replaceChildren();
     const filter = $('filter').value;
-    for (const t of trials.filter(t=>filter==='all'||t.condition===filter).toReversed()) {
+    const visibleTrials = trials.filter(t => filter === 'all' || t.condition === filter);
+    $('ledger-count').textContent = `${visibleTrials.length} of ${trials.length} trials shown`;
+    $('empty').hidden = !!visibleTrials.length;
+    $('empty').textContent = trials.length ? 'No trials match this condition.' : 'Import a saved report or run a capture to see trials here.';
+    for (const t of visibleTrials.toReversed()) {
       const s = P.summarize(t), row = node('tr'), first = node('td',P.CONDITIONS[t.condition]);
       first.append(node('small',`${short(t.trialId)} · ${t.imported ? 'IMPORTED' : 'CAPTURED'} · ${t.protocol.challengeEnabled ? 'PULSE + BLINK' : 'PULSE ONLY'}`));
       row.append(first,node('td',`${fmt(t.durationSec)} s`),node('td',s.outcome.replaceAll('_',' ')));
@@ -437,13 +675,22 @@
   }
   function selectTrial(id,scroll=true) {
     const trial=trials.find(t=>t.trialId===id); if(!trial)return; state.selectedId=id;
+    $('trust-pick').value = id;
     const s=P.summarize(trial); $('detail-panel').hidden=false; $('detail-id').textContent=trial.trialId;
     const content=$('detail-content'); content.replaceChildren();
     content.append(node('p',s.verifier.reason),node('p',`${P.CONDITIONS[trial.condition]} · ${fmt(trial.durationSec)} seconds · mean pulse ${fmt(s.meanPulse)} BPM · stable samples ${s.stableFraction===null?'—':fmt(s.stableFraction*100,0)+'%'} · SDK ${trial.sdkVersion}`));
     const grid=node('div',null,'detail-grid'), left=node('div'),right=node('div');
     left.append(node('h3','Confidence distribution (SDK samples, not independent trials)'));
     const hist=node('div',null,'confidence-histogram'), max=Math.max(1,...s.confidenceBins.map(b=>b.count));
-    for(const bin of s.confidenceBins) { const col=node('div',null,'hist-bin'),wrap=node('div'),bar=node('i');bar.style.height=`${Math.max(2,bin.count/max*75)}px`;wrap.append(bar);col.append(wrap,node('span',`${bin.low}–${bin.low+20}%`),node('span',bin.count));hist.append(col); }
+    for(const bin of s.confidenceBins) {
+      const col=node('div',null,'hist-bin'), wrap=node('div'), bar=node('i');
+      const pct = bin.count / max * 100;
+      bar.style.setProperty('--bar-h', `${pct}%`);
+      bar.style.setProperty('--bar-opacity', `${0.4 + 0.6 * (bin.count / max)}`);
+      wrap.append(bar);
+      col.append(wrap, node('span',`${bin.low}–${bin.low+20}%`), node('span', bin.count));
+      hist.append(col);
+    }
     left.append(hist,node('h3','Frozen policy'),node('pre',JSON.stringify(trial.protocol,null,2)));
     right.append(node('h3','Validation event counts'));
     const counts={}; for(const e of trial.validationEvents)counts[e.name||e.code]=(counts[e.name||e.code]||0)+1;
@@ -463,7 +710,7 @@
     const fresh=imported.filter(t=>!existing.has(t.trialId));
     if(trials.length+fresh.length>300)throw new Error('Import would exceed the 300-trial ledger limit.');
     trials.push(...fresh);state.selectedId=fresh.at(-1)?.trialId||state.selectedId;renderEvidence();
-    await persist();
+    if (!await persist(fresh)) return;
     $('report-status').textContent=`Imported ${fresh.length} trials; skipped ${imported.length-fresh.length} duplicate IDs. Imported evidence is unauthenticated; summaries were recomputed.`;
   }
   window.SpoofML?.mount({getTrials:()=>trials,download,isBusy:()=>!!(state.run||state.cameraCheck)});
@@ -493,9 +740,9 @@
   $('confirm-clear').addEventListener('click',async()=>{
     if(state.run||state.cameraCheck||state.cameraRefresh)return;
     if(window.SpoofStorage){try{await window.SpoofStorage.clear();}catch(error){$('report-status').textContent='Could not delete saved trials: '+error.message;return;}}
-    if(state.run||state.cameraCheck||state.cameraRefresh)return;trials.length=0;state.selectedId=null;window.SpoofArena?.clear?.();window.SpoofML?.clearEvaluation?.();renderEvidence();$('detail-panel').hidden=true;$('detail-content').replaceChildren();
+    if(state.run||state.cameraCheck||state.cameraRefresh)return;pendingSaves.clear();trials.length=0;state.selectedId=null;window.SpoofArena?.clear?.();window.SpoofML?.clearEvaluation?.();renderEvidence();$('detail-panel').hidden=true;$('detail-content').replaceChildren();
     $('trust-signal').textContent='No evidence yet';$('trust-policy').textContent='No trial selected';$('trust-verdict').textContent='Inconclusive';$('trust-reason').textContent='Capture a trial or import an evidence report.';$('trust-trial-id').textContent='NO TRIAL';$('trust-detail').textContent='Capture or select a trial to inspect its frozen policy and reasoning.';
-    for(const id of ['pulse','breathing','confidence'])$(id).textContent='—';draw();$('clear-dialog').close();$('report-status').textContent='In-memory evidence cleared. Exported files remain on your device.';
+    for(const id of ['pulse','breathing','confidence'])$(id).textContent='—';draw([], Number($('duration').value));$('clear-dialog').close();$('report-status').textContent='In-memory evidence cleared. Exported files remain on your device.';
   });
   window.addEventListener('beforeunload',()=>{if(state.cameraRefresh){state.cameraRefresh.cancelled=true;C.stop(state.cameraRefresh.stream);}if(state.cameraCheck){state.cameraCheck.cancelled=true;C.stop(state.cameraCheck.stream);}const run=state.run;if(run){run.cancelled=true;clearInterval(run.timer);run.stream?.getTracks().forEach(t=>t.stop());try{run.sdk?.destroy();}catch{ /* bridge teardown also occurs on window close */ }if(run.url)URL.revokeObjectURL(run.url);}});
   $('runtime-label').textContent=isElectron?'Electron capture environment':'Report workspace';
@@ -515,7 +762,79 @@
     $('status').textContent='Live capture is disabled in this browser preview. Open the SpoofLab desktop app with npm start; it loads your .env key automatically.';
     $('start').title='Requires the SpoofLab Electron desktop app; no frontend key is needed in preview.';
   }
-  renderEvidence();draw();showView(location.hash.slice(1));
-  window.addEventListener('spooflab:metadata-changed',()=>void persist());
+  function jsonBranch(key, value) {
+    if (value === null || typeof value !== 'object') {
+      const line = node('div', null, 'json-leaf');
+      line.append(node('span', key, 'json-key'), node('code', JSON.stringify(value)));
+      return line;
+    }
+    const branch = node('details', null, 'json-branch');
+    const keys = Object.keys(value);
+    branch.append(node('summary', key + ' · ' + keys.length + (Array.isArray(value) ? ' items' : ' fields')));
+    branch.addEventListener('toggle', () => {
+      if (!branch.open || branch.children.length > 1) return;
+      const children = node('div', null, 'json-children');
+      branch.append(children);
+      let offset = 0;
+      function appendPage() {
+        for (const child of keys.slice(offset, offset + 50)) children.append(jsonBranch(child, value[child]));
+        offset += 50;
+        if (offset < keys.length) {
+          const more = node('button', 'Show more fields');
+          more.onclick = () => { more.remove(); appendPage(); };
+          children.append(more);
+        }
+      }
+      appendPage();
+    });
+    return branch;
+  }
+  const readers = new WeakMap();
+  function attachReader(pre) {
+    let trigger = readers.get(pre);
+    if (trigger && !trigger.isConnected) trigger = null;
+    const text = pre.textContent.trim();
+    if (!text.startsWith('{') && !text.startsWith('[')) {
+      if (trigger) trigger.hidden = true;
+      return;
+    }
+    if (trigger) { trigger.hidden = false; return; }
+    trigger = node('button', 'Explore JSON', 'json-open');
+    trigger.type = 'button';
+    trigger.onclick = () => {
+      const raw = pre.textContent;
+      $('json-raw').textContent = raw;
+      $('json-tree').replaceChildren();
+      try {
+        const tree = jsonBranch('Record', JSON.parse(raw));
+        tree.open = true;
+        $('json-tree').append(tree);
+        $('json-context').textContent = 'Expand a field to inspect its values.';
+      } catch {
+        $('json-context').textContent = 'Tree unavailable. Open Raw JSON to inspect the text.';
+      }
+      $('json-reader').showModal();
+    };
+    pre.before(trigger);
+    readers.set(pre, trigger);
+  }
+  const workspace = document.querySelector('main');
+  workspace.querySelectorAll('pre').forEach(attachReader);
+  new MutationObserver(records => {
+    for (const record of records) {
+      if (record.target.matches?.('pre')) attachReader(record.target);
+      for (const added of record.addedNodes) {
+        if (added.matches?.('pre')) attachReader(added);
+        else added.querySelectorAll?.('pre').forEach(attachReader);
+      }
+    }
+  }).observe(workspace, {childList:true, subtree:true});
+  renderEvidence();draw([], Number($('duration').value));showView(location.hash.slice(1));
+  const chartObserver = new ResizeObserver(() => draw());
+  chartObserver.observe($('chart'));
+  window.addEventListener('spooflab:metadata-changed',event=>{
+    const changed = trials.find(t => t.trialId === event.detail);
+    void persist(changed ? [changed] : trials);
+  });
   if(window.SpoofStorage){busy(true);window.SpoofStorage.load().then(saved=>{trials.push(...saved.trials);state.selectedId=trials.at(-1)?.trialId||null;renderEvidence();$('report-status').textContent=`Restored ${saved.trials.length} local trials. ${saved.issues.length} unreadable files. Storage: ${saved.path}`;}).catch(error=>{$('report-status').textContent='Restore failed: '+error.message;}).finally(()=>busy(false));}
 })();

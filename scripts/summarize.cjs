@@ -1,2 +1,3 @@
-// Supplied workflow summary is preserved verbatim in reference/. Legacy exports support historical reports only.
-if(require.main===module){require('./reference/summarize.cjs');require('./enrich-summary.cjs');}else module.exports=require('./legacy-summarize.cjs');
+if(require.main===module){
+  require('./refresh-ledger.cjs').refresh().catch(error=>{console.error(error.message);process.exitCode=1;});
+}else module.exports=require('./legacy-summarize.cjs');
