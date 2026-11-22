@@ -109,3 +109,20 @@ button[aria-busy=true]::before{content:"… ";color:var(--muted)}
 button[aria-busy=true]{cursor:wait}
 /* Focus ring override for signal color update */
 button:focus-visible,:focus-visible{outline-color:var(--signal)}
+
+/* Keep action groups and card baselines aligned as the window narrows. */
+.workspace-actions{display:flex;gap:8px;align-items:center;margin-left:auto}
+.sidebar nav .nav-button{grid-template-columns:20px 20px minmax(0,1fr);column-gap:8px}
+.sidebar .nav-index,.evidence-stats .stat-card span,.verifier-badge{font-size:12px}
+.sidebar .nav-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.page-intro .report-actions{justify-content:flex-end;align-items:center;margin:0}
+.format-grid{align-items:stretch}
+.format-card{padding:24px}
+.format-card h2{margin:0}
+.format-card p{min-height:3em}
+#view-capture .capture-grid,#view-arena .arena-workspace,#view-ml .ml-layout{align-items:start}
+#view-capture .capture-start-bar{bottom:0}
+#view-trust .trust-flow article.panel{min-height:204px}
+#view-trust .trust-flow article>svg{margin-bottom:8px}
+@media(max-width:1100px){.workspace-actions{margin-left:0}}
+@media(max-width:600px){.page-intro .report-actions{justify-content:flex-start}.format-card p{min-height:0}}

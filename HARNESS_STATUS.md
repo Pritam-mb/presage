@@ -1,6 +1,6 @@
 # HARNESS STATUS
 
-Run: 2026-11-21T23:13:38.739Z | mode: FINAL | authorized amendments plus v3 additions
+Run: 2026-11-22T09:04:38.166Z | mode: FINAL | authorized amendments plus v3 additions
 
 | Gate | Check | Type | Result | Detail |
 |---|---|---|---|---|
@@ -23,7 +23,7 @@ Run: 2026-11-21T23:13:38.739Z | mode: FINAL | authorized amendments plus v3 addi
 | G5.2 | submission.json has repo, video, post URLs (final only) | hard | PASS | docs/submission.json |
 | G5.3 | Originality scan recorded (date + entries compared) | hard | PASS | docs/ORIGINALITY.md must compare against existing entries |
 | G5.4 | Post has no unresolved {{tokens}} and keeps published:false until final | hard | PASS | docs/POST.md |
-| G6.1 | Time left to contest deadline: 32.8 h (internal cutoff in 7.3 h) | soft | PASS |  |
+| G6.1 | Time left to contest deadline: 22.9 h (internal cutoff in -2.6 h) | soft | FAIL |  |
 | G5.5 | Manual M1-M5 attestations explicitly signed (final only) | hard | PASS | Never inferred from file existence. Actual operator review is still required. |
 | G5.6 | Completed originality review within 48 hours (final only) | hard | PASS | Requires actual dated review, source links and comparison; placeholder mentions do not satisfy this gate. |
 | G7.1 | Optional window-leakage demo not used (allowed) | soft | PASS |  |

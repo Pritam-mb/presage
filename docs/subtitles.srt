@@ -1,0 +1,163 @@
+1
+00:00:01,000 --> 00:00:05,000
+SpoofLab: Testing Presence Verification Behind Optical Pulse Sensors
+
+2
+00:00:05,500 --> 00:00:09,500
+SmartSpectra measures heart rate and breathing accurately from facial video.
+
+3
+00:00:10,000 --> 00:00:14,000
+However, a recorded video of a face still contains a genuine optical pulse.
+
+4
+00:00:14,500 --> 00:00:18,500
+Detecting a pulse does not prove a live person is physically present.
+
+5
+00:00:19,000 --> 00:00:23,500
+SpoofLab is an experimental workbench to test decision rules and trade-offs.
+
+6
+00:00:24,000 --> 00:00:28,000
+Part 1: Camera Frame Rate & Calibration
+
+7
+00:00:28,500 --> 00:00:32,500
+Our 6-second camera diagnostic verifies frame rate >= 25 FPS for the SDK.
+
+8
+00:00:33,000 --> 00:00:37,000
+Part 2: Live Baseline Capture
+
+9
+00:00:37,500 --> 00:00:41,500
+After confirming consent, SmartSpectra locks onto live optical blood flow.
+
+10
+00:00:42,000 --> 00:00:46,000
+Pulse rate and breathing update in real time with active sparklines.
+
+11
+00:00:46,500 --> 00:00:51,500
+The 12-second warm-up is strictly excluded to prevent startup bias.
+
+12
+00:00:52,000 --> 00:00:56,000
+Part 3: The Replay Dilemma
+
+13
+00:00:56,500 --> 00:01:00,500
+We test 4 inputs: Live, Printed Photo, Screen Replay, and Digital Video.
+
+14
+00:01:01,000 --> 00:01:05,500
+When replaying a video on a screen, the sensor still detects a pulse.
+
+15
+00:01:06,000 --> 00:01:10,500
+A naive rule that only checks "pulse detected" passes screen replays.
+
+16
+00:01:11,000 --> 00:01:15,000
+Part 4: Active Freshness Challenge
+
+17
+00:01:15,500 --> 00:01:19,500
+To solve this, SpoofLab issues randomized micro-challenges.
+
+18
+00:01:20,000 --> 00:01:24,000
+The user is prompted to blink an exact number of times during capture.
+
+19
+00:01:24,500 --> 00:01:28,500
+A live user responds in real time; a static replay cannot predict the prompt.
+
+20
+00:01:29,000 --> 00:01:33,500
+Part 5: Policy Arena — Blind Evaluation
+
+21
+00:01:34,000 --> 00:01:38,000
+The Policy Arena evaluates three frozen rules with zero metadata leakage.
+
+22
+00:01:38,500 --> 00:01:42,500
+The verifier only sees numerical stability and validation metrics.
+
+23
+00:01:43,000 --> 00:01:47,000
+We evaluate the trial blindly, then click "Reveal" to flip the card.
+
+24
+00:01:47,500 --> 00:01:52,000
+Every rule moves the trade-off: stricter gates cut replays but fail live users.
+
+25
+00:01:52,500 --> 00:01:56,500
+Part 6: Trust Boundaries Architecture
+
+26
+00:01:57,000 --> 00:02:01,000
+We enforce separation: Measurement -> Policy -> Verdict.
+
+27
+00:02:01,500 --> 00:02:05,500
+A physiological signal is sensor data, not an authentication claim.
+
+28
+00:02:06,000 --> 00:02:10,000
+Part 7: Evidence Ledger (33 Trials)
+
+29
+00:02:10,500 --> 00:02:14,500
+All 33 attempts remain in the ledger, including 10 inconclusive trials.
+
+30
+00:02:15,000 --> 00:02:19,000
+Never silently drop inconclusive trials—retaining them ensures an honest audit.
+
+31
+00:02:19,500 --> 00:02:24,000
+Our matrix uses Wilson confidence intervals across all retained attempts.
+
+32
+00:02:24,500 --> 00:02:28,500
+Part 8: Model Lab Limits Analysis
+
+33
+00:02:29,000 --> 00:02:33,000
+Instead of claiming inflated ML accuracy, we ran an honest limits analysis.
+
+34
+00:02:33,500 --> 00:02:37,500
+Our 50-run shuffled label control matched real fits 8 times.
+
+35
+00:02:38,000 --> 00:02:42,500
+Leave-one-group-out cross-validation yielded an AUC interval spanning chance.
+
+36
+00:02:43,000 --> 00:02:47,500
+Summary features alone cannot generalize without active freshness challenges.
+
+37
+00:02:48,000 --> 00:02:52,000
+Part 9: Privacy & Open Source
+
+38
+00:02:52,500 --> 00:02:56,500
+SpoofLab is 100% local: zero cloud telemetry and zero video recording.
+
+39
+00:02:57,000 --> 00:03:01,500
+All local evidence can be purged with a single click in Export.
+
+40
+00:03:02,000 --> 00:03:06,500
+Open source on GitHub: github.com/Pritam-mb/presage
+
+41
+00:03:07,000 --> 00:03:12,000
+Break the assumptions, not the sensor.

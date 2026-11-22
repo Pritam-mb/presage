@@ -2,8 +2,8 @@
 @font-face{font-family:"Inter Tight";font-style:normal;font-weight:600;font-display:swap;src:url("../../node_modules/@fontsource/inter-tight/files/inter-tight-latin-600-normal.woff2") format("woff2")}
 @font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:400;font-display:swap;src:url("../../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2") format("woff2")}
 :root{
- --bg:#0A0D0B; --surface:#101512; --raised:#161C18; --line:#232B26; --line-strong:#35413A;
- --text:#E6EDE8; --muted:#8FA095; --signal:#2EE59D; --signal-dim:#0E7A4F; --amber:#E8B04A; --red:#E5645A; --neutral:#C9D3CC;
+ --bg:#0A100E; --surface:#101B16; --raised:#172720; --line:#273A31; --line-strong:#405A4D;
+ --text:#EAF2ED; --muted:#A9BAB0; --signal:#70E6AF; --signal-dim:#24845C; --amber:#E8B04A; --red:#E5645A; --neutral:#D2E2D8;
  --mono:"JetBrains Mono",Consolas,monospace; --ui:"Inter Tight","Segoe UI",sans-serif;
  --accent:var(--signal); --border:var(--line-strong); --panel:var(--surface);
  --rail:240px; --title-height:40px; --gutter:24px; --radius:6px; --control-radius:4px;

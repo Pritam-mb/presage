@@ -14,6 +14,7 @@
     consent:'m4 12 5 5L20 6', camera:'M3 6h13v12H3z M16 10l5-3v10l-5-3',
     sdk:'M7 7h10v10H7z M9 2v5m6-5v5m-6 10v5m6-5v5M2 9h5m-5 6h5m10-6h5m-5 6h5',
     lock:'M5 10h14v11H5z M8 10V7a4 4 0 0 1 8 0v3',
+    reload:'M20 5v6h-6 M20 11a8 8 0 1 0 .1 3',
     circle:'M19 12a7 7 0 1 1-14 0 7 7 0 1 1 14 0'
   };
   function icon(name){
@@ -35,6 +36,26 @@
     toggle.onclick=()=>{const compact=document.body.classList.toggle('compact-rail');toggle.setAttribute('aria-expanded',String(!compact));toggle.setAttribute('aria-label',compact?'Expand navigation':'Collapse navigation');};
     document.querySelectorAll('[data-icon]').forEach(e=>e.replaceChildren(icon(e.dataset.icon)));
     $('privacy').prepend(icon('lock'));
+    const reload=$('reload-workspace');
+    reload.prepend(icon('reload'));
+    function reloadWorkspace(){
+      const data=read();
+      const training=document.querySelector('#view-ml [aria-busy="true"]');
+      if(data.busy || training){
+        reload.title='Finish the current task before reloading.';
+        return;
+      }
+      if(data.preview && data.evidence.count &&
+        !window.confirm('Reload and clear the evidence imported into this browser preview?'))return;
+      location.reload();
+    }
+    reload.onclick=reloadWorkspace;
+    document.addEventListener('keydown',event=>{
+      if((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase()==='r'){
+        event.preventDefault();
+        reloadWorkspace();
+      }
+    });
     const statusItems=[['consent','Consent'],['camera','Camera FPS'],['sdk','SDK'],['evidence','Local evidence']];
     const buttons=new Map(),drawer=$('status-drawer');let selected;
     for(const [key,label] of statusItems){
@@ -51,6 +72,8 @@
         b.dataset.state=d.state;
         if(selected===key){$('drawer-title').textContent=label;$('drawer-detail').textContent=d.detail;}
       }
+      reload.disabled=data.busy;
+      reload.title=data.busy?'Finish the current task before reloading.':'Reload workspace (Ctrl+R)';
       $('window-section').textContent=pages[location.hash.slice(1)]||pages.capture;
       $('export-guidance').textContent=data.evidence.count?'Downloads include the trials currently in the ledger.':'Save a trial or import an evidence JSON in Evidence to enable downloads.';
     }

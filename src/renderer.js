@@ -40,7 +40,7 @@
     $('camera-device').disabled = value || !isElectron;
     $('refresh-cameras').disabled = value || !isElectron;
     $('stop').disabled = !value;
-    document.querySelectorAll('.report-actions button, #export-json, #export-csv, #export-html').forEach(el => { el.disabled = value || !trials.length; });
+    document.querySelectorAll('.report-actions button:not([data-view]), #export-json, #export-csv, #export-html').forEach(el => { el.disabled = value || !trials.length; });
     document.querySelector('label[for="import-file"]').setAttribute('aria-disabled', String(value));
     updateCapture();
   }
@@ -49,13 +49,15 @@
     const consent = $('consent').checked && ($('condition').value === 'live' || $('recording-consent').checked);
     const fps = cameraReady() ? cameraReadiness.fps : null;
     return {
+      busy: Boolean(state.run || state.cameraCheck || state.cameraRefresh || !$('stop').disabled),
+      preview: !isElectron,
       consent: { value: consent ? 'Recorded' : 'Pending', state: consent ? 'signal' : 'attention',
         detail: consent ? 'Consent recorded for the selected input. The app saves trial metrics locally and never records video.' : 'Confirm the consent checkbox. A recording input also needs permission to use that source.' },
       camera: { value: fps === null ? 'Unavailable' : fmt(fps, 1) + ' FPS', state: fps !== null && fps >= 25 ? 'signal' : 'attention',
         detail: fps === null ? 'Run the six-second camera check. Camera trials require at least 25 delivered FPS.' : `Last diagnostic: ${fmt(fps, 1)} delivered FPS, measured ${new Date(cameraReadiness.at).toLocaleTimeString()}.` },
-      sdk: { value: state.sdk ? 'Bridge ready' : (isElectron ? 'Loading' : 'Preview mode'), state: state.sdk ? 'signal' : (isElectron ? 'attention' : 'neutral'),
-        detail: state.sdk ? 'SmartSpectra bridge loaded through the local IPC adapter. No renderer network access is used.' : (isElectron ? 'The local SDK bridge is still loading.' : 'Browser preview: live SDK capture runs in the Electron desktop app.') },
-      evidence: { value: trials.length + ' local ' + (trials.length === 1 ? 'trial' : 'trials'), count: trials.length, state: trials.length ? 'signal' : 'neutral',
+      sdk: { value: state.sdk ? 'Bridge ready' : (isElectron ? 'Standby' : 'Preview'), state: state.sdk ? 'signal' : (isElectron ? 'attention' : 'neutral'),
+        detail: state.sdk ? 'SmartSpectra bridge loaded through the local IPC adapter. No renderer network access is used.' : (isElectron ? 'The SDK bridge starts when needed.' : 'Browser preview: live SDK capture runs in the Electron desktop app.') },
+      evidence: { value: String(trials.length), count: trials.length, state: trials.length ? 'signal' : 'neutral',
         detail: trials.length ? `${trials.length} attempts in the local ledger. Counts describe trials, not independent people.` : 'No local trials yet. Capture a trial or import a JSON evidence report.' }
     };
   }
